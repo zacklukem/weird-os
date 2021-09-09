@@ -1,0 +1,4 @@
+#!/bin/bash
+
+size=$(wc -c $1 | head -c 3)
+dd if=/dev/zero of=$1 bs=512 count=15 seek=$size status=none

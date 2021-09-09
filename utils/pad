@@ -1,0 +1,6 @@
+#!/bin/bash
+
+size=$(wc -c $1 | head -c 3)
+msize=$(expr 510 - $size)
+dd if=/dev/zero of=$1 bs=1 count=$msize seek=$size status=none
+printf '\x55\xaa' >> $1
