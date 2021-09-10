@@ -19,6 +19,13 @@ void next_line() {
                   column_number * 2);
 }
 
+void cleark() {
+  vbuf = VIDEO_BUFFER;
+  for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT * 2; ++i) {
+    vbuf[i] = 0x0;
+  }
+}
+
 void printk(const char *text) {
   for (int i = 0; text[i] != 0; ++i) {
     if (text[i] == '\n') {

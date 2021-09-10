@@ -24,7 +24,7 @@ struct regs {
   unsigned int eip, cs, eflags, useresp, ss;
 };
 
-struct idt_entry idt[0x100];
+struct idt_entry idt[256];
 
 struct idt_desc idt_descriptor;
 
@@ -63,11 +63,11 @@ extern void isr29();
 extern void isr30();
 extern void isr31();
 
-#define INT_GATE 0xe
-#define TRAP_GATE 0xf
-#define TASK_GATE 0x5
+#define INT_GATE 0x8e
+//#define TRAP_GATE 0xf
+//#define TASK_GATE 0x5
 
-unsigned char *exception_messages[32] = {
+char *exception_messages[32] = {
     "Division By Zero Exception",
     "Debug Exception",
     "Non Maskable Interrupt Exception",
@@ -105,7 +105,7 @@ unsigned char *exception_messages[32] = {
 void init_idt_entry(uint32_t offset, uint16_t selector, uint8_t type,
                     struct idt_entry *entry) {
   entry->offset_1 = offset & 0xffff;
-  entry->offset_2 = (offset & 0xffff0000) >> 16;
+  entry->offset_2 = (offset >> 16) & 0xff;
   entry->selector = selector;
   entry->type_attr = type;
   entry->zero = 0x0;
@@ -116,6 +116,9 @@ void init_idt() {
   for (int i = 0; i < 0xff; ++i) {
     init_idt_entry(0, 0x08, INT_GATE, &idt[i]);
   }
+
+  idt_descriptor.size = (sizeof(struct idt_entry) * 256) - 1;
+  idt_descriptor.address = (size_t)&idt;
 
   init_idt_entry((uint32_t)isr0, 0x08, INT_GATE, &idt[0]);
   init_idt_entry((uint32_t)isr1, 0x08, INT_GATE, &idt[1]);
@@ -150,18 +153,11 @@ void init_idt() {
   init_idt_entry((uint32_t)isr30, 0x08, INT_GATE, &idt[30]);
   init_idt_entry((uint32_t)isr31, 0x08, INT_GATE, &idt[31]);
 
-  idt_descriptor.size = (sizeof(struct idt_entry) * 0x100) - 1;
-  idt_descriptor.address = (size_t)&idt;
-
   asm_idt_load();
 }
 
 void cpu_fault_handler(struct regs *r) {
-  /* Is this a fault whose number is from 0 to 31? */
   if (r->int_no < 32) {
-    /* Display the description for the Exception that occurred.
-     *         *  In this tutorial, we will simply halt the system using an
-     *                 *  infinite loop */
     printk(exception_messages[r->int_no]);
     printk(" Exception. System Halted!\n");
     while (1)

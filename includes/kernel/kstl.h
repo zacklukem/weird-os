@@ -6,6 +6,7 @@
   __assert(#expr, __FILE__, __LINE__)
 
 void printk(const char *text);
+void cleark();
 void __assert(const char *msg, const char *file, int line);
 int itoa(int value, char *out, int base);
 

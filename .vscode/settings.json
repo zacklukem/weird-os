@@ -1,0 +1,9 @@
+{
+	"files.associations": {
+		"*.html": "html",
+		"*.njk": "html",
+		"*.hh": "cpp",
+		"*.s": "nasm",
+		"idt.h": "c"
+	}
+}
