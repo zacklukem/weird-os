@@ -7,16 +7,40 @@
 #define SCREEN_WIDTH 80
 #define SCREEN_HEIGHT 24
 
-size_t line_number = 0;
-size_t column_number = 0;
+#define REG_SCREEN_CTRL 0x3d4
+#define REG_SCREEN_DATA 0x3d5
 
-char *vbuf = VIDEO_BUFFER;
+static size_t line_number = 0;
+static size_t column_number = 0;
 
-void next_line() {
+static char *vbuf = VIDEO_BUFFER;
+
+uint16_t get_cursor() {
+  port_byte_out(REG_SCREEN_CTRL, 14);
+  int offset = port_byte_in(REG_SCREEN_DATA) << 8; // high byte
+  port_byte_out(REG_SCREEN_CTRL, 15);
+  offset += port_byte_in(REG_SCREEN_DATA); // low byte
+
+  return offset;
+}
+
+void set_cursor(uint16_t offset) {
+  port_byte_out(REG_SCREEN_CTRL, 14);
+  port_byte_out(REG_SCREEN_DATA, (offset >> 8) & 0xff); // high byte
+  port_byte_out(REG_SCREEN_CTRL, 15);
+  port_byte_out(REG_SCREEN_DATA, offset & 0xff); // low byte
+}
+
+static void place_cursor() {
+  set_cursor(SCREEN_WIDTH * line_number + column_number);
+}
+
+static void next_line() {
   line_number++;
   column_number = 0;
   vbuf = (char *)((size_t)VIDEO_BUFFER + line_number * SCREEN_WIDTH * 2 +
                   column_number * 2);
+  place_cursor();
 }
 
 void cleark() {
@@ -24,6 +48,14 @@ void cleark() {
   for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT * 2; ++i) {
     vbuf[i] = 0x0;
   }
+}
+
+static void putc(char c) {
+  vbuf[0] = c;
+  vbuf[1] = 0x0f;
+  vbuf += 2;
+  column_number++;
+  place_cursor();
 }
 
 void printk(const char *text) {
@@ -34,10 +66,7 @@ void printk(const char *text) {
       if (column_number >= SCREEN_WIDTH) {
         next_line();
       }
-      vbuf[0] = text[i];
-      vbuf[1] = 0x0f;
-      vbuf += 2;
-      column_number++;
+      putc(text[i]);
     }
   }
 }

@@ -1,26 +1,3 @@
-
-; Exception #  Description  Error Code?
-; 0  Division By Zero Exception  No
-; 1  Debug Exception  No
-; 2  Non Maskable Interrupt Exception  No
-; 3  Breakpoint Exception  No
-; 4  Into Detected Overflow Exception  No
-; 5  Out of Bounds Exception  No
-; 6  Invalid Opcode Exception  No
-; 7  No Coprocessor Exception  No
-; 8  Double Fault Exception  Yes
-; 9  Coprocessor Segment Overrun Exception  No
-; 10  Bad TSS Exception  Yes
-; 11  Segment Not Present Exception  Yes
-; 12  Stack Fault Exception  Yes
-; 13  General Protection Fault Exception  Yes
-; 14  Page Fault Exception  Yes
-; 15  Unknown Interrupt Exception  No
-; 16  Coprocessor Fault Exception  No
-; 17  Alignment Check Exception (486+)  No
-; 18  Machine Check Exception (Pentium/586+)  No
-; 19 to 31  Reserved Exceptions  No
-
 %macro exp_isr 2
 
 global isr%1
@@ -67,6 +44,19 @@ exp_isr 28, 0
 exp_isr 29, 0
 exp_isr 30, 0
 exp_isr 31, 0
+
+extern syscall_handler
+global isr80
+
+isr80:
+  cli
+  pusha
+  push eax
+  mov eax, syscall_handler
+  call eax
+  pop eax
+  popa
+  iret
 
 extern cpu_fault_handler
 

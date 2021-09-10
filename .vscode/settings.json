@@ -4,6 +4,7 @@
 		"*.njk": "html",
 		"*.hh": "cpp",
 		"*.s": "nasm",
-		"idt.h": "c"
+		"idt.h": "c",
+		"irq.h": "c"
 	}
 }

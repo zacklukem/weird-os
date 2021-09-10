@@ -17,15 +17,8 @@ struct idt_desc {
 } __attribute__((packed));
 _Static_assert(sizeof(struct idt_desc) == 6, "Packing error");
 
-struct regs {
-  unsigned int gs, fs, es, ds;
-  unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax;
-  unsigned int int_no, err_code;
-  unsigned int eip, cs, eflags, useresp, ss;
-};
 
 struct idt_entry idt[256];
-
 struct idt_desc idt_descriptor;
 
 extern void asm_idt_load();
@@ -62,8 +55,11 @@ extern void isr28();
 extern void isr29();
 extern void isr30();
 extern void isr31();
+extern void isr80();
 
-#define INT_GATE 0x8e
+#define ENABLED 0x80
+
+#define INT_GATE 0x0e
 //#define TRAP_GATE 0xf
 //#define TASK_GATE 0x5
 
@@ -111,6 +107,11 @@ void init_idt_entry(uint32_t offset, uint16_t selector, uint8_t type,
   entry->zero = 0x0;
 }
 
+void idt_set_gate(uint32_t offset, uint16_t selector, uint8_t type,
+                  uint8_t index) {
+  init_idt_entry(offset, selector, type, &idt[index]);
+}
+
 void init_idt() {
 
   for (int i = 0; i < 0xff; ++i) {
@@ -120,40 +121,51 @@ void init_idt() {
   idt_descriptor.size = (sizeof(struct idt_entry) * 256) - 1;
   idt_descriptor.address = (size_t)&idt;
 
-  init_idt_entry((uint32_t)isr0, 0x08, INT_GATE, &idt[0]);
-  init_idt_entry((uint32_t)isr1, 0x08, INT_GATE, &idt[1]);
-  init_idt_entry((uint32_t)isr2, 0x08, INT_GATE, &idt[2]);
-  init_idt_entry((uint32_t)isr3, 0x08, INT_GATE, &idt[3]);
-  init_idt_entry((uint32_t)isr4, 0x08, INT_GATE, &idt[4]);
-  init_idt_entry((uint32_t)isr5, 0x08, INT_GATE, &idt[5]);
-  init_idt_entry((uint32_t)isr6, 0x08, INT_GATE, &idt[6]);
-  init_idt_entry((uint32_t)isr7, 0x08, INT_GATE, &idt[7]);
-  init_idt_entry((uint32_t)isr8, 0x08, INT_GATE, &idt[8]);
-  init_idt_entry((uint32_t)isr9, 0x08, INT_GATE, &idt[9]);
-  init_idt_entry((uint32_t)isr10, 0x08, INT_GATE, &idt[10]);
-  init_idt_entry((uint32_t)isr11, 0x08, INT_GATE, &idt[11]);
-  init_idt_entry((uint32_t)isr12, 0x08, INT_GATE, &idt[12]);
-  init_idt_entry((uint32_t)isr13, 0x08, INT_GATE, &idt[13]);
-  init_idt_entry((uint32_t)isr14, 0x08, INT_GATE, &idt[14]);
-  init_idt_entry((uint32_t)isr15, 0x08, INT_GATE, &idt[15]);
-  init_idt_entry((uint32_t)isr16, 0x08, INT_GATE, &idt[16]);
-  init_idt_entry((uint32_t)isr17, 0x08, INT_GATE, &idt[17]);
-  init_idt_entry((uint32_t)isr18, 0x08, INT_GATE, &idt[18]);
-  init_idt_entry((uint32_t)isr19, 0x08, INT_GATE, &idt[19]);
-  init_idt_entry((uint32_t)isr20, 0x08, INT_GATE, &idt[20]);
-  init_idt_entry((uint32_t)isr21, 0x08, INT_GATE, &idt[21]);
-  init_idt_entry((uint32_t)isr22, 0x08, INT_GATE, &idt[22]);
-  init_idt_entry((uint32_t)isr23, 0x08, INT_GATE, &idt[23]);
-  init_idt_entry((uint32_t)isr24, 0x08, INT_GATE, &idt[24]);
-  init_idt_entry((uint32_t)isr25, 0x08, INT_GATE, &idt[25]);
-  init_idt_entry((uint32_t)isr26, 0x08, INT_GATE, &idt[26]);
-  init_idt_entry((uint32_t)isr27, 0x08, INT_GATE, &idt[27]);
-  init_idt_entry((uint32_t)isr28, 0x08, INT_GATE, &idt[28]);
-  init_idt_entry((uint32_t)isr29, 0x08, INT_GATE, &idt[29]);
-  init_idt_entry((uint32_t)isr30, 0x08, INT_GATE, &idt[30]);
-  init_idt_entry((uint32_t)isr31, 0x08, INT_GATE, &idt[31]);
+  init_idt_entry((uint32_t)isr0, 0x08, ENABLED | INT_GATE, &idt[0]);
+  init_idt_entry((uint32_t)isr1, 0x08, ENABLED | INT_GATE, &idt[1]);
+  init_idt_entry((uint32_t)isr2, 0x08, ENABLED | INT_GATE, &idt[2]);
+  init_idt_entry((uint32_t)isr3, 0x08, ENABLED | INT_GATE, &idt[3]);
+  init_idt_entry((uint32_t)isr4, 0x08, ENABLED | INT_GATE, &idt[4]);
+  init_idt_entry((uint32_t)isr5, 0x08, ENABLED | INT_GATE, &idt[5]);
+  init_idt_entry((uint32_t)isr6, 0x08, ENABLED | INT_GATE, &idt[6]);
+  init_idt_entry((uint32_t)isr7, 0x08, ENABLED | INT_GATE, &idt[7]);
+  init_idt_entry((uint32_t)isr8, 0x08, ENABLED | INT_GATE, &idt[8]);
+  init_idt_entry((uint32_t)isr9, 0x08, ENABLED | INT_GATE, &idt[9]);
+  init_idt_entry((uint32_t)isr10, 0x08, ENABLED | INT_GATE, &idt[10]);
+  init_idt_entry((uint32_t)isr11, 0x08, ENABLED | INT_GATE, &idt[11]);
+  init_idt_entry((uint32_t)isr12, 0x08, ENABLED | INT_GATE, &idt[12]);
+  init_idt_entry((uint32_t)isr13, 0x08, ENABLED | INT_GATE, &idt[13]);
+  init_idt_entry((uint32_t)isr14, 0x08, ENABLED | INT_GATE, &idt[14]);
+  init_idt_entry((uint32_t)isr15, 0x08, ENABLED | INT_GATE, &idt[15]);
+  init_idt_entry((uint32_t)isr16, 0x08, ENABLED | INT_GATE, &idt[16]);
+  init_idt_entry((uint32_t)isr17, 0x08, ENABLED | INT_GATE, &idt[17]);
+  init_idt_entry((uint32_t)isr18, 0x08, ENABLED | INT_GATE, &idt[18]);
+  init_idt_entry((uint32_t)isr19, 0x08, ENABLED | INT_GATE, &idt[19]);
+  init_idt_entry((uint32_t)isr20, 0x08, ENABLED | INT_GATE, &idt[20]);
+  init_idt_entry((uint32_t)isr21, 0x08, ENABLED | INT_GATE, &idt[21]);
+  init_idt_entry((uint32_t)isr22, 0x08, ENABLED | INT_GATE, &idt[22]);
+  init_idt_entry((uint32_t)isr23, 0x08, ENABLED | INT_GATE, &idt[23]);
+  init_idt_entry((uint32_t)isr24, 0x08, ENABLED | INT_GATE, &idt[24]);
+  init_idt_entry((uint32_t)isr25, 0x08, ENABLED | INT_GATE, &idt[25]);
+  init_idt_entry((uint32_t)isr26, 0x08, ENABLED | INT_GATE, &idt[26]);
+  init_idt_entry((uint32_t)isr27, 0x08, ENABLED | INT_GATE, &idt[27]);
+  init_idt_entry((uint32_t)isr28, 0x08, ENABLED | INT_GATE, &idt[28]);
+  init_idt_entry((uint32_t)isr29, 0x08, ENABLED | INT_GATE, &idt[29]);
+  init_idt_entry((uint32_t)isr30, 0x08, ENABLED | INT_GATE, &idt[30]);
+  init_idt_entry((uint32_t)isr31, 0x08, ENABLED | INT_GATE, &idt[31]);
+
+  // Syscall
+  init_idt_entry((uint32_t)isr80, 0x08, ENABLED | INT_GATE, &idt[0x80]);
 
   asm_idt_load();
+}
+
+void syscall_handler(int eax) {
+  char data[16];
+  itoa(eax, data, 10);
+  printk("Handle syscall: ");
+  printk(data);
+  printk("\n");
 }
 
 void cpu_fault_handler(struct regs *r) {
@@ -161,6 +173,6 @@ void cpu_fault_handler(struct regs *r) {
     printk(exception_messages[r->int_no]);
     printk(" Exception. System Halted!\n");
     while (1)
-      ;
+      __asm__("hlt" ::);
   }
 }

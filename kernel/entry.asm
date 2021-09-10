@@ -61,7 +61,7 @@ flush2:
 ; Service Routines (ISRs) right here!
 %include "kernel/idt.s"
 %include "kernel/isr.s"
-
+%include "kernel/irq.s"
 
 ; Here is the definition of our BSS section. Right now, we'll use
 ; it just to store the stack. Remember that a stack actually grows
