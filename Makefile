@@ -3,7 +3,7 @@ BOOT_SRC := ./boot
 KERNEL_SRC := ./kernel
 
 # Find all the C and C++ files we want to compile
-BOOT_SRCS := $(shell find $(BOOT_SRC) -name "*.asm")
+BOOT_SRCS := $(shell find $(BOOT_SRC) -name "*.asm" -o -name "*.c")
 BOOT_OBJS := $(BOOT_SRCS:%=$(BUILD_DIR)/%.o)
 
 KERNEL_C_SRCS := $(shell find $(KERNEL_SRC) -name "*.c")

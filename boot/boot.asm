@@ -9,6 +9,7 @@ extern puts
 extern gdt_descriptor
 extern CODE_SEG
 extern DATA_SEG
+extern check_a20
 
 _start:
 
@@ -25,6 +26,16 @@ _start:
   mov bx, hello_world
   call puts
 
+  call check_a20
+  cmp ax, 1
+  je .a20_enabled
+  mov bx, disabled
+  jmp .a20_end
+.a20_enabled:
+  mov bx, enabled
+.a20_end:
+  call puts
+
   call switch_to_pm
 
   jmp $
@@ -32,6 +43,8 @@ _start:
 boot_drive db 0
 
 hello_world db "Loaded disk successfully", 0
+enabled db "; a20 is enabled", 0
+disabled db "; a20 is disabled", 0
 
 switch_to_pm:
   cli

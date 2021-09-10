@@ -1,11 +1,11 @@
+#include <kernel/idt.h>
 #include <kernel/kstl.h>
 
 void __kernel_main__() {
-  assert(0);
-  char tmp[16];
-  itoa(-123, tmp, 10);
-  printk(tmp);
-  //  printk("Hello Clang!");
+  init_idt();
+  __asm__("sti" ::);
+#pragma GCC diagnostic ignored "-Wdiv-by-zero"
+  int a = 23 / 0;
   while (1)
     ;
 }
