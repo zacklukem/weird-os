@@ -1,5 +1,4 @@
 #include <kernel/gdt.h>
-#include <kernel/kstl.h>
 #include <stdint.h>
 
 /**

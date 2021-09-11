@@ -1,4 +1,3 @@
-#include <kernel/kstl.h>
 #include <string.h>
 
 /**
@@ -21,7 +20,7 @@ int itoa(int value, char *out, int base) {
   while (v) {
     i = v % base;
     v /= base;
-    *tmp++ = i + '0';
+    *tmp++ = i + (i < 10 ? '0' : 'a');
     len++;
   }
 

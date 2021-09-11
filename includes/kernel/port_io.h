@@ -1,16 +1,5 @@
-#ifndef INCLUDES_KERNEL_KSTL
-#define INCLUDES_KERNEL_KSTL
-
-#include <stdint.h>
-
-// Screen utilities
-void k_init_stdout();
-void printk(const char *text);
-void cleark();
-uint16_t get_cursor();
-void set_cursor(uint16_t offset);
-
-// String utils
+#ifndef INCLUDES_KERNEL_PORT_IO
+#define INCLUDES_KERNEL_PORT_IO
 
 // Port utils
 static inline unsigned char port_byte_in(unsigned short port) {
@@ -33,11 +22,4 @@ static inline void port_word_out(unsigned short port, unsigned short data) {
   __asm__("out %%al, %%dx" : : "a"(data), "d"(port));
 }
 
-struct regs {
-  unsigned int gs, fs, es, ds;
-  unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax;
-  unsigned int int_no, err_code;
-  unsigned int eip, cs, eflags, useresp, ss;
-};
-
-#endif // INCLUDES_KERNEL_KSTL
+#endif // INCLUDES_KERNEL_PORT_IO

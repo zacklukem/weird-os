@@ -1,4 +1,5 @@
-#include <kernel/kstl.h>
+#include <kernel/port_io.h>
+#include <kernel/printk.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -87,6 +88,9 @@ void cleark() {
   for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT * 2; ++i) {
     vbuf[i] = 0x0;
   }
+  line_number = 0;
+  column_number = 0;
+  place_cursor();
 }
 
 /**
@@ -106,6 +110,9 @@ static void kputc(char c) {
 static int kputchar(int c) {
   if (c == '\n') {
     next_line();
+  } else if (c == '\r') {
+    column_number = 0;
+    place_cursor();
   } else {
     if (column_number >= SCREEN_WIDTH) {
       next_line();

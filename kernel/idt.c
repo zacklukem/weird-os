@@ -1,5 +1,7 @@
 #include <kernel/idt.h>
-#include <kernel/kstl.h>
+#include <kernel/printk.h>
+#include <kernel/regs.h>
+#include <stdio.h>
 #include <string.h>
 
 /**
@@ -214,6 +216,36 @@ void syscall_handler(int eax) {
  * Handle cpu exceptions
  */
 void cpu_fault_handler(struct regs *r) {
+  if (r->int_no == 14) { // page fault
+    // A page fault has occurred.
+    // The faulting address is stored in the CR2 register.
+    uint32_t faulting_address;
+    __asm__ __volatile__("mov %%cr2, %0" : "=r"(faulting_address));
+
+    // The error code gives us details of what happened.
+    int present = !(r->err_code & 0x1); // Page not present
+    int rw = r->err_code & 0x2;         // Write operation?
+    int us = r->err_code & 0x4;         // Processor was in user-mode?
+    int reserved =
+        r->err_code & 0x8; // Overwritten CPU-reserved bits of page entry?
+    // int id = r->err_code & 0x10; // Caused by an instruction fetch?
+
+    // Output an error message.
+    printk("Page fault! ( ");
+    if (present) {
+      printk("present ");
+    }
+    if (rw) {
+      printk("read-only ");
+    }
+    if (us) {
+      printk("user-mode ");
+    }
+    if (reserved) {
+      printk("reserved ");
+    }
+    printf(") at 0x%x\n", faulting_address);
+  }
   if (r->int_no < 32) {
     printk(exception_messages[r->int_no]);
     printk(" Exception. System Halted!\n");

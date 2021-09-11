@@ -10,6 +10,10 @@
 		"stdarg.h": "c",
 		"kstl.h": "c",
 		"stdio.h": "c",
-		"timer.h": "c"
-	}
+		"timer.h": "c",
+		"shell.h": "c"
+	},
+	"C/C++ Include Guard.Comment Style": "Line",
+	"C/C++ Include Guard.Macro Type": "Filepath",
+	"C/C++ Include Guard.Remove Extension": false
 }

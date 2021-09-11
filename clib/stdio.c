@@ -59,6 +59,19 @@ int vfprintf(FILE *f, const char *format, va_list args) {
         itoa(value, buf, 10);
         fputs(buf, f);
       } break;
+      case 'x': {
+        uint32_t value = va_arg(args, uint32_t);
+        uint32_t tmp_value = value;
+        char buf[16];
+
+        for (int i = 7; i >= 0; --i) {
+          char v = tmp_value & 0xf;
+          buf[i] = v + (v < 10 ? '0' : ('a' - 10));
+          tmp_value >>= 4;
+        }
+        buf[8] = 0;
+        fputs(buf, f);
+      } break;
       case 's': {
         char *value = va_arg(args, char *);
         fputs(value, f);
