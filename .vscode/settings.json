@@ -5,6 +5,11 @@
 		"*.hh": "cpp",
 		"*.s": "nasm",
 		"idt.h": "c",
-		"irq.h": "c"
+		"irq.h": "c",
+		"string.h": "c",
+		"stdarg.h": "c",
+		"kstl.h": "c",
+		"stdio.h": "c",
+		"timer.h": "c"
 	}
 }

@@ -1,2 +1,5 @@
 build/
 *.swp
+# Doxygen files
+html/
+man/

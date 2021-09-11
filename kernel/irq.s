@@ -1,4 +1,6 @@
 
+
+; Macro to make creating irq tempates cleaner
 %macro exp_irq 1
 
 global irq%1
@@ -28,8 +30,10 @@ exp_irq 13
 exp_irq 14
 exp_irq 15
 
+; Handler function defined in irq.c
 extern irq_handler
 
+; Pushes registers to stack to call the irq handler
 irq_common_stub:
 	pusha
 	push ds

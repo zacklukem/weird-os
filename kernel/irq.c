@@ -19,20 +19,22 @@ extern void irq13();
 extern void irq14();
 extern void irq15();
 
-void *irq_routines[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+/**
+ * the list of function pointers to irq routines
+ */
+static void *irq_routines[16] = {0, 0, 0, 0, 0, 0, 0, 0,
+                                 0, 0, 0, 0, 0, 0, 0, 0};
 
+/**
+ * Set an IRQ routine to a particular function
+ */
 void install_irq_routine(size_t port, void (*handler)(struct regs *r)) {
   irq_routines[port] = (void *)handler;
 }
 
-/* Normally, IRQs 0 to 7 are mapped to entries 8 to 15. This
- *  is a problem in protected mode, because IDT entry 8 is a
- *  Double Fault! Without remapping, every time IRQ0 fires,
- *  you get a Double Fault Exception, which is NOT actually
- *  what's happening. We send commands to the Programmable
- *  Interrupt Controller (PICs - also called the 8259's) in
- *  order to make IRQ0 to 15 be remapped to IDT entries 32 to
- *  47 */
+/**
+ * Remap the real mode irq's to not cause double fault
+ */
 static void irq_remap(void) {
   port_byte_out(0x20, 0x11);
   port_byte_out(0xA0, 0x11);
@@ -46,9 +48,9 @@ static void irq_remap(void) {
   port_byte_out(0xA1, 0x0);
 }
 
-/* We first remap the interrupt controllers, and then we install
- *  the appropriate ISRs to the correct entries in the IDT. This
- *  is just like installing the exception handlers */
+/**
+ * Initialize the IRQ by adding them tp the IDT
+ */
 void irq_install() {
   irq_remap();
 
@@ -70,25 +72,23 @@ void irq_install() {
   idt_set_gate((uint32_t)irq15, 0x08, 0x8e, 32 + 15);
 }
 
+/**
+ * Handle IRQ's
+ */
 void irq_handler(struct regs *r) {
-  /* This is a blank function pointer */
   void (*handler)(struct regs * r);
 
-  /* Find out if we have a custom handler to run for this
-   *  IRQ, and then finally, run it */
+  // See if handler has been set and if so, call it
   handler = irq_routines[r->int_no - 32];
   if (handler) {
     handler(r);
   }
 
-  /* If the IDT entry that was invoked was greater than 40
-   *  (meaning IRQ8 - 15), then we need to send an EOI to
-   *  the slave controller */
+  // See if we need to forward IRQ to the slave controller
   if (r->int_no >= 40) {
     port_byte_out(0xA0, 0x20);
   }
 
-  /* In either case, we need to send an EOI to the master
-   *  interrupt controller too */
+  // Send to mater controller
   port_byte_out(0x20, 0x20);
 }

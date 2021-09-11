@@ -1,28 +1,47 @@
 #include <kernel/idt.h>
 #include <kernel/kstl.h>
+#include <string.h>
 
+/**
+ * An entry in the IDT table
+ */
 struct idt_entry {   // https://wiki.osdev.org/Interrupt_Descriptor_Table
-  uint16_t offset_1; // offset bits 0..15
-  uint16_t selector; // a code segment selector in GDT or LDT
-  uint8_t zero;      // unused, set to 0
-  uint8_t type_attr; // type and attributes, see below
-  uint16_t offset_2; // offset bits 16..31
+  uint16_t offset_1; ///< offset bits 0..15
+  uint16_t selector; ///< a code segment selector in GDT or LDT
+  uint8_t zero;      ///< unused, set to 0
+  uint8_t type_attr; ///< type and attributes, see below
+  uint16_t offset_2; ///< offset bits 16..31
 } __attribute__((packed));
 
 _Static_assert(sizeof(struct idt_entry) == 8, "Packing error");
 
+/**
+ * The IDT descriptor that is passed to the lidt instruction in order to
+ * activate the IDT.
+ */
 struct idt_desc {
-  uint16_t size;    // size - 1
-  uint32_t address; // idt_start
+  uint16_t size;    ///< size - 1
+  uint32_t address; ///< idt_start
 } __attribute__((packed));
 _Static_assert(sizeof(struct idt_desc) == 6, "Packing error");
 
+/**
+ * The IDT
+ */
+static struct idt_entry idt[256];
 
-struct idt_entry idt[256];
+/**
+ * The IDT descriptor passed to the lidt intruction
+ */
 struct idt_desc idt_descriptor;
 
+/**
+ * Asm function implemented in idt.s which loads the idt from the idt_descriptor
+ * with the lidt instruction
+ */
 extern void asm_idt_load();
 
+// ISR's 0-31 (exceptions)
 extern void isr0();
 extern void isr1();
 extern void isr2();
@@ -55,15 +74,22 @@ extern void isr28();
 extern void isr29();
 extern void isr30();
 extern void isr31();
+
+// ISR 80 (syscall)
 extern void isr80();
 
+// Set enable bit
 #define ENABLED 0x80
 
+// Set int gate bits
 #define INT_GATE 0x0e
 //#define TRAP_GATE 0xf
 //#define TASK_GATE 0x5
 
-char *exception_messages[32] = {
+/**
+ * The list of exception messeges for isr's 0-31
+ */
+static char *exception_messages[32] = {
     "Division By Zero Exception",
     "Debug Exception",
     "Non Maskable Interrupt Exception",
@@ -98,8 +124,11 @@ char *exception_messages[32] = {
     "Reserved",
 };
 
-void init_idt_entry(uint32_t offset, uint16_t selector, uint8_t type,
-                    struct idt_entry *entry) {
+/**
+ * Initialize an IDT entry with the given values
+ */
+static void init_idt_entry(uint32_t offset, uint16_t selector, uint8_t type,
+                           struct idt_entry *entry) {
   entry->offset_1 = offset & 0xffff;
   entry->offset_2 = (offset >> 16) & 0xff;
   entry->selector = selector;
@@ -107,20 +136,29 @@ void init_idt_entry(uint32_t offset, uint16_t selector, uint8_t type,
   entry->zero = 0x0;
 }
 
+/**
+ * Set an IDT gate (called externally)
+ */
 void idt_set_gate(uint32_t offset, uint16_t selector, uint8_t type,
                   uint8_t index) {
   init_idt_entry(offset, selector, type, &idt[index]);
 }
 
+/**
+ * Initialize the IDT
+ */
 void init_idt() {
 
+  // Fill the IDT with disabled interupts
   for (int i = 0; i < 0xff; ++i) {
     init_idt_entry(0, 0x08, INT_GATE, &idt[i]);
   }
 
+  // Initialize the idt descriptor
   idt_descriptor.size = (sizeof(struct idt_entry) * 256) - 1;
   idt_descriptor.address = (size_t)&idt;
 
+  // Initialize the IDT exceptions
   init_idt_entry((uint32_t)isr0, 0x08, ENABLED | INT_GATE, &idt[0]);
   init_idt_entry((uint32_t)isr1, 0x08, ENABLED | INT_GATE, &idt[1]);
   init_idt_entry((uint32_t)isr2, 0x08, ENABLED | INT_GATE, &idt[2]);
@@ -154,12 +192,16 @@ void init_idt() {
   init_idt_entry((uint32_t)isr30, 0x08, ENABLED | INT_GATE, &idt[30]);
   init_idt_entry((uint32_t)isr31, 0x08, ENABLED | INT_GATE, &idt[31]);
 
-  // Syscall
+  // Syscall interupt
   init_idt_entry((uint32_t)isr80, 0x08, ENABLED | INT_GATE, &idt[0x80]);
 
+  // Load the idt with the lidt instruction
   asm_idt_load();
 }
 
+/**
+ * Handle syscalls (called from assembly isr)
+ */
 void syscall_handler(int eax) {
   char data[16];
   itoa(eax, data, 10);
@@ -168,6 +210,9 @@ void syscall_handler(int eax) {
   printk("\n");
 }
 
+/**
+ * Handle cpu exceptions
+ */
 void cpu_fault_handler(struct regs *r) {
   if (r->int_no < 32) {
     printk(exception_messages[r->int_no]);

@@ -1,5 +1,5 @@
-#ifndef STDINT_H
-#define STDINT_H
+#ifndef INCLUDES_STDINT
+#define INCLUDES_STDINT
 
 typedef unsigned char int8_t;
 _Static_assert(sizeof(int8_t) == 1, "int8_t is not 1 byte");
@@ -23,4 +23,4 @@ typedef unsigned int size_t;
 _Static_assert(sizeof(size_t) == sizeof(void *),
                "size_t is not equal to pointer size");
 
-#endif
+#endif // INCLUDES_STDINT

@@ -1,5 +1,8 @@
 #include <kernel/kstl.h>
+#include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 // The b-8000 is the newest development in our line of video buffers!
 #define VIDEO_BUFFER ((char *)0xb8000)
@@ -10,11 +13,16 @@
 #define REG_SCREEN_CTRL 0x3d4
 #define REG_SCREEN_DATA 0x3d5
 
-static size_t line_number = 0;
-static size_t column_number = 0;
+static size_t line_number = 0;   ///< The current cursor line number
+static size_t column_number = 0; ///< The current cursor column
 
-static char *vbuf = VIDEO_BUFFER;
+static char *vbuf = VIDEO_BUFFER; ///< Pointer to the cursor location
 
+FILE _k_stdout;
+
+/**
+ * Get the cursor offset
+ */
 uint16_t get_cursor() {
   port_byte_out(REG_SCREEN_CTRL, 14);
   int offset = port_byte_in(REG_SCREEN_DATA) << 8; // high byte
@@ -24,6 +32,9 @@ uint16_t get_cursor() {
   return offset;
 }
 
+/**
+ * Set the cursor offset
+ */
 void set_cursor(uint16_t offset) {
   port_byte_out(REG_SCREEN_CTRL, 14);
   port_byte_out(REG_SCREEN_DATA, (offset >> 8) & 0xff); // high byte
@@ -31,18 +42,46 @@ void set_cursor(uint16_t offset) {
   port_byte_out(REG_SCREEN_DATA, offset & 0xff); // low byte
 }
 
+/**
+ * Set the cursor offset to the current cursor position
+ */
 static void place_cursor() {
   set_cursor(SCREEN_WIDTH * line_number + column_number);
-}
-
-static void next_line() {
-  line_number++;
-  column_number = 0;
   vbuf = (char *)((size_t)VIDEO_BUFFER + line_number * SCREEN_WIDTH * 2 +
                   column_number * 2);
+}
+
+/**
+ * Scroll down n lines
+ */
+static void scroll_lines(int l) {
+  uint16_t *vb = (uint16_t *)VIDEO_BUFFER;
+  for (int i = l; i < SCREEN_HEIGHT; ++i) {
+    memcpy(&vb[(i - 1) * SCREEN_WIDTH], &vb[i * SCREEN_WIDTH],
+           SCREEN_WIDTH * 2);
+  }
+
+  for (int i = SCREEN_HEIGHT - l; i < SCREEN_HEIGHT; ++i) {
+    memset(&vb[i * SCREEN_WIDTH], 0, SCREEN_WIDTH * 2);
+  }
+}
+
+/**
+ * Move to new line and carrage return
+ */
+static void next_line() {
+  line_number++;
+  if (line_number >= SCREEN_HEIGHT) {
+    scroll_lines(1);
+    line_number = SCREEN_HEIGHT - 1;
+  }
+  column_number = 0;
   place_cursor();
 }
 
+/**
+ * Clear the screen
+ */
 void cleark() {
   vbuf = VIDEO_BUFFER;
   for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT * 2; ++i) {
@@ -50,7 +89,10 @@ void cleark() {
   }
 }
 
-static void putc(char c) {
+/**
+ * Add char to end of buffer and move cursor.
+ */
+static void kputc(char c) {
   vbuf[0] = c;
   vbuf[1] = 0x0f;
   vbuf += 2;
@@ -58,15 +100,40 @@ static void putc(char c) {
   place_cursor();
 }
 
-void printk(const char *text) {
-  for (int i = 0; text[i] != 0; ++i) {
-    if (text[i] == '\n') {
+/**
+ * Add char to buffer while checking if it is a control character
+ */
+static int kputchar(int c) {
+  if (c == '\n') {
+    next_line();
+  } else {
+    if (column_number >= SCREEN_WIDTH) {
       next_line();
-    } else {
-      if (column_number >= SCREEN_WIDTH) {
-        next_line();
-      }
-      putc(text[i]);
     }
+    kputc(c);
   }
+  return c;
 }
+
+char out_buffer[100];
+
+static int io_flush_handler() {
+  for (int i = 0; out_buffer[i] != 0; ++i) {
+    kputchar(out_buffer[i]);
+  }
+  memset(out_buffer, 0, 100);
+  stdout->_IO_write_ptr = out_buffer;
+  return 0;
+}
+
+void k_init_stdout() {
+  stdout = &_k_stdout;
+  stdout->_IO_write_base = out_buffer;
+  stdout->_IO_write_ptr = out_buffer;
+  stdout->_flush_func = io_flush_handler;
+}
+
+/**
+ * Print a string
+ */
+void printk(const char *text) { puts(text); }

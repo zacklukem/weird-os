@@ -1,5 +1,5 @@
 BUILD_DIR := build
-KERNEL_SRC := kernel
+KERNEL_SRC := kernel clib
 
 # Find all the C and C++ files we want to compile
 KERNEL_C_SRCS := $(shell find $(KERNEL_SRC) -name "*.c")

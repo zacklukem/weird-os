@@ -1,5 +1,10 @@
+#include <assert.h>
 #include <kernel/kstl.h>
+#include <string.h>
 
+/**
+ * internal assert implementation
+ */
 void __assert(const char *msg, const char *file, int line) {
   // Assertion failed: p != NULL, file main.c, line 5
   printk("Assertion failed: ");

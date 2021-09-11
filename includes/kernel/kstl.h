@@ -3,21 +3,14 @@
 
 #include <stdint.h>
 
-// Assert macro and definition
-#define assert(expr)                                                           \
-  if (!(expr))                                                                 \
-  __assert(#expr, __FILE__, __LINE__)
-
-void __assert(const char *msg, const char *file, int line);
-
 // Screen utilities
+void k_init_stdout();
 void printk(const char *text);
 void cleark();
 uint16_t get_cursor();
 void set_cursor(uint16_t offset);
 
 // String utils
-int itoa(int value, char *out, int base);
 
 // Port utils
 static inline unsigned char port_byte_in(unsigned short port) {
