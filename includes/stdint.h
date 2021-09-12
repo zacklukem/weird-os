@@ -23,4 +23,8 @@ typedef unsigned int size_t;
 _Static_assert(sizeof(size_t) == sizeof(void *),
                "size_t is not equal to pointer size");
 
+typedef int ssize_t;
+_Static_assert(sizeof(ssize_t) == sizeof(void *),
+               "ssize_t is not equal to pointer size");
+
 #endif // INCLUDES_STDINT

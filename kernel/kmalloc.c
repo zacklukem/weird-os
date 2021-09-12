@@ -134,25 +134,29 @@ static struct block_header *get_suitable_block(size_t size, int page_align,
   }
 }
 
+static void create_new_block_header(struct block_header *block, size_t size) {
+  // create a new block header
+  struct block_header *new_block =
+      (struct block_header *)(((void *)block) + size +
+                              sizeof(struct block_header));
+  if (block->next) {
+    block->next->previous = new_block;
+  }
+  new_block->next = block->next;
+  new_block->previous = block;
+  new_block->size = block->size - size - sizeof(struct block_header);
+  new_block->magic = MAGIC & 0xfffffffe;
+
+  block->next = new_block;
+  block->size = size;
+  block->magic |= 0x1;
+}
+
 void *alloc_internal(size_t size, int page_align, struct heap *heap) {
   struct block_header *block = get_suitable_block(size, page_align, heap);
   // See if we should split the block
   if (block->size - size > sizeof(struct block_header) + MIN_BLOCK_SIZE) {
-    // create a new block header
-    struct block_header *new_block =
-        (struct block_header *)(((void *)block) + size +
-                                sizeof(struct block_header));
-    if (block->next) {
-      block->next->previous = new_block;
-    }
-    new_block->next = block->next;
-    new_block->previous = block;
-    new_block->size = block->size - size - sizeof(struct block_header);
-    new_block->magic = MAGIC & 0xfffffffe;
-
-    block->next = new_block;
-    block->size = size;
-    block->magic |= 0x1;
+    create_new_block_header(block, size);
   }
   // Return pointer to the data not the block header
   return get_memory_address(block);
@@ -203,6 +207,34 @@ void free(void *mem) {
     merge_blocks(previous_header, current);
     current = previous_header;
   }
+}
+
+uint32_t krealloc(uint32_t ptr, uint32_t sz) {
+  struct block_header *header =
+      (struct block_header *)(ptr - sizeof(struct block_header));
+  assert(is_valid(header->magic) && "Heap block is invalid!");
+  if (header->size >= sz) { // No malloc needed
+    return ptr;
+  }
+  if (!header->next ||                // End of heap space
+      is_used(header->next->magic) || // Next header is used
+      // Next header is not big enough to merge and realloc
+      (header->next->size + header->size + sizeof(struct block_header) < sz)) {
+    // We start this block from scratch
+    uint32_t new_ptr = kmalloc(sz);
+    memcpy((void *)new_ptr, (void *)ptr, header->size);
+    free((void *)ptr);
+    return new_ptr;
+  }
+  size_t merge_size =
+      header->next->size + header->size + sizeof(struct block_header);
+  // Sanity check
+  assert(merge_size >= sz && "Realloc error");
+  merge_blocks(header, header->next);
+  if (merge_size - sz > (MIN_BLOCK_SIZE + sizeof(struct block_header))) {
+    create_new_block_header(header, sz);
+  }
+  return ptr;
 }
 
 static uint32_t kmalloc_internal(uint32_t sz, int align, uint32_t *phys) {

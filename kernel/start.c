@@ -7,6 +7,7 @@
 #include <kernel/printk.h>
 #include <kernel/shell.h>
 #include <kernel/timer.h>
+#include <kernel/vector.h>
 #include <stdio.h>
 
 /**
@@ -39,15 +40,36 @@ void __kernel_main__() {
 
   cleark();
 
-  char *a = (void *)kmalloc(8);
-  char *b = (void *)kmalloc_a(8);
-  char *c = (void *)kmalloc(8);
-  a[2] = 3;
+  struct vector vec = vector_create(uint32_t);
+  vector_push(uint32_t, &vec, 1234);
+  vector_push(uint32_t, &vec, 1234);
+  vector_push(uint32_t, &vec, 1234);
+  vector_push(uint32_t, &vec, 1234);
+  vector_push(uint32_t, &vec, 1234);
+  vector_push(uint32_t, &vec, 1234);
+  vector_push(uint32_t, &vec, 1234);
+  vector_push(uint32_t, &vec, 1234);
+  vector_push(uint32_t, &vec, 1234);
+  vector_push(uint32_t, &vec, 1234);
+  size_t a = kmalloc(8);
+  // size_t b =
+  kmalloc(8);
+
+  free((void *)a);
   heap_info();
-  free(a);
-  free(b);
-  free(c);
+  vector_push(uint32_t, &vec, 1234);
+  vector_push(uint32_t, &vec, 1234);
   heap_info();
+
+  // char *a = (void *)kmalloc(8);
+  // char *b = (void *)kmalloc_a(8);
+  // char *c = (void *)kmalloc(8);
+  // a[2] = 3;
+  // heap_info();
+  // free(a);
+  // free(b);
+  // free(c);
+  // heap_info();
 
   // int *ptr = (int *)0xA0000000;
   // int do_page_fault = *ptr;

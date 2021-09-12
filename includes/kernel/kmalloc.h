@@ -52,6 +52,15 @@ uint32_t kmalloc_ap(uint32_t sz, uint32_t *phys);
  */
 uint32_t kmalloc(uint32_t sz);
 
+/**
+ * @brief Reallocate an already allocated chunk of memory
+ *
+ * @param ptr
+ * @param sz
+ * @return uint32_t
+ */
+uint32_t krealloc(uint32_t ptr, uint32_t sz);
+
 void init_kernal_heap(size_t size, void *start);
 struct heap create_heap(size_t size, void *start);
 void *alloc_internal(size_t size, int page_align, struct heap *heap);
