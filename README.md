@@ -2,6 +2,17 @@
 
 My having fun making a 32-bit (for now) kernel and maybe some other stuff to go with it.
 
+## Features
+ * [x] Boot
+ * [x] Screen output
+ * [x] Keyboard input
+ * [-] printf and other clib (a bit)
+ * [x] Paging
+ * [x] Dynamic memory
+ * [ ] Virtual file system
+ * [ ] multiprocessing
+ * [ ] user mode
+
 ## Build Requirements
 
  * nasm
