@@ -4,12 +4,16 @@
 #include <kernel/printk.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 extern uint32_t end;
 uint32_t _internal_placement_address = (uint32_t)&end;
 
 #define MAGIC 0x5d6d9cd6
 #define MIN_BLOCK_SIZE 4
+
+struct heap kheap_s;
+struct heap *kheap = 0;
 
 static inline int is_used(uint32_t magic) { return magic & 0x1; }
 
@@ -29,13 +33,14 @@ static void merge_blocks(struct block_header *first,
   first->size += second->size + sizeof(struct block_header);
 }
 
-void heap_info(struct heap *heap) {
-  printf("\nBlk Addr | Mem Addr | Stat | Size\n");
+void heap_info() {
+  printf("\nBlk Addr | Mem Addr | Stat | Size     | Space Taken\n");
   struct block_header *current;
-  for (current = heap->first_block; current; current = current->next) {
-    printf("%x | %x | %s | %d\n", (uint32_t)current,
+  for (current = kheap->first_block; current; current = current->next) {
+    printf("%x | %x | %s | %x | %x\n", (uint32_t)current,
            (uint32_t)current + sizeof(struct block_header),
-           is_used(current->magic) ? "used" : "free", current->size);
+           is_used(current->magic) ? "used" : "free", current->size,
+           current->size + sizeof(struct block_header));
   }
 }
 
@@ -51,28 +56,84 @@ struct heap create_heap(size_t size, void *start) {
   return ret_val;
 }
 
-// TODO: Page align
+void init_kernal_heap(size_t size, void *start) {
+  kheap_s = create_heap(size, start);
+  kheap = &kheap_s;
+}
+
+static inline void *get_memory_address(struct block_header *block) {
+  return ((void *)block) + sizeof(struct block_header);
+}
+
+static inline uint32_t get_distance_to_next_page(uint32_t addr) {
+  return 0x1000 - (addr & 0xfff);
+}
+
+static inline uint32_t get_next_page(uint32_t addr) {
+  return (addr & 0xfffff000) + 0x1000;
+}
+
+static struct block_header *make_aligned_block(size_t size,
+                                               struct block_header *block) {
+  //
+  uint32_t mem_address = (uint32_t)get_memory_address(block);
+  uint32_t distance =
+      get_distance_to_next_page(mem_address); // last 12 bits are the distance
+  uint32_t nearest = get_next_page(mem_address);
+  uint32_t header_pos = nearest - sizeof(struct block_header);
+  // for now just move the block and resize previous block
+
+  block->size -= distance;
+  block->previous->next = (void *)header_pos;
+  block->previous->size += distance;
+
+  // move the header to its new home
+  memcpy((void *)header_pos, block, sizeof(struct block_header));
+
+  return (void *)header_pos;
+}
+
 static struct block_header *get_suitable_block(size_t size, int page_align,
                                                struct heap *heap) {
   struct block_header *best = heap->first_block;
   struct block_header *current = heap->first_block;
+
   while (is_used(best->magic)) {
     assert(best->next && "No unused blocks");
     best = best->next;
   }
+
   while (current->next) {
     // Get smallest unused block with size at least equal to given size
-    if (!is_used(current->magic) && current->size >= size &&
-        current->size < best->size) {
-      best = current;
+    if (!is_used(current->magic)) {
+      uint32_t required_size = size;
+      if (page_align) {
+        uint32_t mem_address = (uint32_t)get_memory_address(current);
+        uint32_t distance =
+            mem_address & 0xfff; // last 12 bits are the distance
+        required_size += distance;
+      }
+      // if not page aligned, we only need the smallest unused block big
+      // enough for our data
+      if (current->size >= required_size &&
+          (current->size < best->size || best->size < required_size)) {
+        best = current;
+      }
     }
     current = current->next;
   }
-  assert(best->size >= size && "Out of heap space");
-  return best;
+  if (page_align) {
+    uint32_t mem_address = (uint32_t)get_memory_address(best);
+    uint32_t distance = mem_address & 0xfff; // last 12 bits are the distance
+    assert(best->size + distance >= size &&
+           "Out of heap space for aligned malloc");
+    return make_aligned_block(size, best);
+  } else {
+    assert(best->size >= size && "Out of heap space");
+    return best;
+  }
 }
 
-// TODO: page align
 void *alloc_internal(size_t size, int page_align, struct heap *heap) {
   struct block_header *block = get_suitable_block(size, page_align, heap);
   // See if we should split the block
@@ -89,12 +150,12 @@ void *alloc_internal(size_t size, int page_align, struct heap *heap) {
     new_block->size = block->size - size - sizeof(struct block_header);
     new_block->magic = MAGIC & 0xfffffffe;
 
-    block->size = size;
     block->next = new_block;
+    block->size = size;
     block->magic |= 0x1;
   }
   // Return pointer to the data not the block header
-  return ((void *)(block) + sizeof(struct block_header));
+  return get_memory_address(block);
 }
 
 /**
@@ -145,18 +206,26 @@ void free(void *mem) {
 }
 
 static uint32_t kmalloc_internal(uint32_t sz, int align, uint32_t *phys) {
-  // If the address is not already page-aligned
-  if (align == 1 && (_internal_placement_address & 0xFFFFF000)) {
-    // Align it.
-    _internal_placement_address &= 0xFFFFF000;
-    _internal_placement_address += 0x1000;
+  if (kheap != 0) {
+    void *addr = alloc_internal(sz, align, kheap);
+    if (phys != 0) {
+      struct page *page = get_page((uint32_t)addr, 0, kernel_directory);
+      *phys = page->frame * 0x1000 + ((uint32_t)addr & 0xfff);
+    }
+    return (uint32_t)addr;
+  } else {
+    if (align == 1 && (_internal_placement_address & 0xFFFFF000)) {
+      // Align the placement address;
+      _internal_placement_address &= 0xFFFFF000;
+      _internal_placement_address += 0x1000;
+    }
+    if (phys) {
+      *phys = _internal_placement_address;
+    }
+    uint32_t tmp = _internal_placement_address;
+    _internal_placement_address += sz;
+    return tmp;
   }
-  if (phys) {
-    *phys = _internal_placement_address;
-  }
-  uint32_t tmp = _internal_placement_address;
-  _internal_placement_address += sz;
-  return tmp;
 }
 
 uint32_t kmalloc_a(uint32_t sz) { return kmalloc_internal(sz, 1, 0); }

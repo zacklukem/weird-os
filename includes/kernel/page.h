@@ -3,6 +3,9 @@
 
 #include <kernel/regs.h>
 
+extern struct page_directory *kernel_directory;
+extern struct page_directory *current_directory;
+
 struct page {
   uint32_t present : 1;  // Page present in memory
   uint32_t rw : 1;       // Read-only if clear, readwrite if set

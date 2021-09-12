@@ -39,14 +39,15 @@ void __kernel_main__() {
 
   cleark();
 
-  struct heap kheap = create_heap(0x2000, (void *)0xC0000000);
-  void *a = alloc_internal(8, 0, &kheap);
-  void *b = alloc_internal(8, 0, &kheap);
-  void *c = alloc_internal(8, 0, &kheap);
+  char *a = (void *)kmalloc(8);
+  char *b = (void *)kmalloc_a(8);
+  char *c = (void *)kmalloc(8);
+  a[2] = 3;
+  heap_info();
   free(a);
   free(b);
   free(c);
-  heap_info(&kheap);
+  heap_info();
 
   // int *ptr = (int *)0xA0000000;
   // int do_page_fault = *ptr;

@@ -79,6 +79,9 @@ void free_frame(struct page *page) {
   }
 }
 
+#define KHEAP_START 0xc0000000
+#define KHEAP_SIZE 0x10000
+
 /**
  * Sets up the environment, page directories etc and
  * enables paging.
@@ -113,7 +116,7 @@ void initialise_paging() {
   }
 
   // Now allocate those pages we mapped earlier.
-  for (i = 0xC0000000; i < 0xC0000000 + 0x2000; i += 0x1000)
+  for (i = KHEAP_START; i < KHEAP_START + KHEAP_SIZE; i += 0x1000)
     alloc_frame(get_page(i, 1, kernel_directory), 0, 0);
 
   // Before we enable paging, we must register our page fault handler.
@@ -121,6 +124,8 @@ void initialise_paging() {
 
   // Now, enable paging!
   switch_page_directory(kernel_directory);
+
+  init_kernal_heap(KHEAP_SIZE, (void *)KHEAP_START);
 }
 
 /**

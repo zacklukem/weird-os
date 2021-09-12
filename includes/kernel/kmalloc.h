@@ -30,7 +30,7 @@ struct heap {
   uint32_t size;
 };
 
-void heap_info(struct heap *heap);
+void heap_info();
 
 /**
  * Page aligned kernel malloc
@@ -52,6 +52,7 @@ uint32_t kmalloc_ap(uint32_t sz, uint32_t *phys);
  */
 uint32_t kmalloc(uint32_t sz);
 
+void init_kernal_heap(size_t size, void *start);
 struct heap create_heap(size_t size, void *start);
 void *alloc_internal(size_t size, int page_align, struct heap *heap);
 void free(void *mem);
