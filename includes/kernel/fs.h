@@ -1,66 +1,133 @@
 #ifndef INCLUDES_KERNEL_FS_H
 #define INCLUDES_KERNEL_FS_H
 
+#include <kernel/kmalloc.h>
+#include <kernel/list.h>
+#include <kernel/llist.h>
 #include <stdint.h>
+
+// File mode masks
+#define S_IRUSR 0400 // Read permission, owner.
+#define S_IWUSR 0200 // Write permission, owner.
+#define S_IXUSR 0100 // Execute/search permission, owner.
+#define S_IRWXU                                                                \
+  S_IRUSR | S_IWUSR | S_IXUSR // Read, write, execute/search by owner.
+
+#define S_IRGRP 040 // Read permission, group.
+#define S_IWGRP 020 // Write permission, group.
+#define S_IXGRP 010 // Execute/search permission, group.
+#define S_IRWXG                                                                \
+  S_IRGRP | S_IWGRP | S_IXGRP // Read, write, execute/search by group.
+
+#define S_IROTH 04 // Read permission, others.
+#define S_IWOTH 02 // Write permission, others.
+#define S_IXOTH 01 // Execute/search permission, others.
+#define S_IRWXO                                                                \
+  S_IROTH | S_IWOTH | S_IXOTH // Read, write, execute/search by others.
+
+#define S_ISUID 04000 // Set-user-ID on execution.
+#define S_ISGID 02000 // Set-group-ID on execution.
+#define S_ISVTX 01000 // On directories, restricted deletion flag.
+
+#define S_IFDIR 0040000  // Directory.
+#define S_IFCHR 0020000  // Character device
+#define S_IFBLK 0060000  // Block device.
+#define S_IFREG 0100000  // Regular file.
+#define S_IFIFO 0010000  // FIFO.
+#define S_IFLNK 0120000  // Symbolic link.
+#define S_IFSOCK 0140000 // Socket.
+
+// Open flags
+#define O_EXEC 0x1   ///< Exec only
+#define O_RDONLY 0x2 ///< Read only
+#define O_RDWR 0x4   ///< Read write only
+#define O_SEARCH 0x8
+#define O_WRONLY 0x10 ///< Write only
+#define O_APPEND 0x20 ///< Append mode
+#define O_CLOEXEC 0x40
+#define O_CREAT 0x80      ///< TODO:Check the standard i have no clue
+#define O_DIRECTORY 0x100 ///< Fail if not directory
+#define O_DSYNC 0x200
+#define O_EXCL 0x400
+#define O_NOCTTY 0x800
+#define O_NOFOLLOW 0x1000
+#define O_NONBLOCK 0x2000
+#define O_RSYNC 0x4000
+#define O_SYNC 0x8000
+#define O_TRUNC 0x10000
+#define O_TTY_INIT 0x20000
+
+#define S_ISBLK(m) ((m)&S_IFBLK == S_IFBLK) // Test for a block special file.
+#define S_ISCHR(m)                                                             \
+  ((m)&S_IFCHR == S_IFCHR) // Test for a character special file.
+#define S_ISDIR(m) ((m)&S_IFDIR == S_IFDIR) // Test for a directory.
+#define S_ISFIFO(m)                                                            \
+  ((m)&S_IFIFO == S_IFIFO) // Test for a pipe or FIFO special file.
+#define S_ISREG(m) ((m)&S_IFREG == S_IFREG)    // Test for a regular file.
+#define S_ISLNK(m) ((m)&S_IFLNK == S_IFLNK)    // Test for a symbolic link.
+#define S_ISSOCK(m) ((m)&S_IFSOCK == S_IFSOCK) // Test for a socket.
+
+#define FD_MAX 512 // Max file descriptors
 
 typedef uint32_t uid_t;
 typedef uint32_t ino_t;
 typedef uint32_t gid_t;
 typedef uint32_t off_t;
+typedef uint32_t dev_t;
+typedef uint32_t mode_t;
+typedef uint32_t nlink_t;
+typedef uint32_t time_t;
+typedef uint32_t blksize_t;
+typedef uint32_t blkcnt_t;
 
-// TODO: move to unistd
-ssize_t read(int fildes, void *buf, size_t nbyte, off_t offset);
-ssize_t write(int fildes, const void *buf, size_t n, off_t offset);
-int close(int fildes);
-int open(const char *path, int oflag, ...);
+// TODO: move to syscall
+ssize_t syscall_read(int fildes, void *buf, size_t nbyte, off_t offset);
+ssize_t syscall_write(int fildes, const void *buf, size_t n, off_t offset);
+int syscall_close(int fildes);
+int syscall_open(const char *path, int oflag, ...);
 
-struct fs_node;
+struct fdtable {
+  struct file *data[FD_MAX];
+  size_t last_desc;
+}
+
+struct file {
+  size_t references;
+  struct inode *inode;
+  int oflag;
+};
+
+struct inode;
 
 struct dirent {
-  char name[128]; // Filename.
-  ino_t ino;      // Inode number. Required by POSIX.
+  struct list_head siblings;
+  char ident[0xff];
+  struct inode *inode;
+  struct dirent *parent;      // Must be cached if exists
+  struct list_head *children; // Children (if cached)
 };
 
-typedef uint32_t (*read_type_t)(struct fs_node *node, void *buf, size_t n,
-                                off_t offset);
-typedef uint32_t (*write_type_t)(struct fs_node *node, const void *buf,
-                                 size_t n, off_t offset);
-typedef void (*open_type_t)(struct fs_node *node, int oflag, ...);
-typedef void (*close_type_t)(struct fs_node *node);
-typedef struct dirent *(*readdir_type_t)(struct fs_node *, uint32_t);
-typedef struct fs_node *(*finddir_type_t)(struct fs_node *, char *name);
-
-#define FS_FILE 0x01
-#define FS_DIRECTORY 0x02
-#define FS_CHARDEVICE 0x03
-#define FS_BLOCKDEVICE 0x04
-#define FS_PIPE 0x05
-#define FS_SYMLINK 0x06
-#define FS_MOUNTPOINT 0x08 // Is the file an active mountpoint?
-
-struct fs_node {
-  char name[128];  // The filename.
-  uint32_t mask;   // The permissions mask.
-  uid_t uid;       // The owning user.
-  gid_t gid;       // The owning group.
-  uint32_t flags;  // Includes the node type. See #defines above.
-  ino_t inode;     // This is device-specific - provides a way for a
-  uint32_t length; // Size of the file, in bytes.
-  read_type_t read;
-  write_type_t write;
-  open_type_t open;
-  close_type_t close;
-  readdir_type_t readdir;
-  finddir_type_t finddir;
-  struct fs_node *ptr; // Used by mountpoints and symlinks.
+struct inode_ops {
+  void (*read)(struct inode *inode, void *buf, size_t nbyte, off_t offset);
+  void (*write)(struct inode *inode, void *buf, size_t n, off_t offset);
+  struct list_head *(*readdir)(struct inode *inode);
 };
 
-uint32_t read_node(struct fs_node *node, void *buf, size_t n, off_t offset);
-uint32_t write_node(struct fs_node *node, const void *buf, size_t n,
-                    off_t offset);
-void open_node(struct fs_node *node, int oflag);
-void close_node(struct fs_node *node);
-struct dirent *readdir_node(struct fs_node *, uint32_t);
-struct fs_node *finddir_node(struct fs_node *, char *name);
+// https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/stat.h.html
+struct inode {
+  dev_t device;       // Device ID of device containing file.
+  ino_t inode;        // File serial number.
+  mode_t mode;        // Mode of file (see below).
+  nlink_t nlink;      // Number of hard links to the file.
+  uid_t uid;          // User ID of file.
+  gid_t gid;          // Group ID of file.
+  dev_t rdevice;      // Device ID (if file is character or block special).
+  off_t size;         // For regular files, the file size in bytes.
+  time_t access_time; // Time of last access.
+  time_t mod_time;    // Time of last data modification.
+  time_t stat_time;   // Time of last status change.
+  struct inode_ops ops;
+  struct dirent *dirent;
+};
 
 #endif // INCLUDES_KERNEL_FS_H
