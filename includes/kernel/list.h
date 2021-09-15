@@ -2,7 +2,7 @@
 #define INCLUDES_KERNEL_LIST_H
 
 #include <assert.h>
-#include <macros.h>
+#include <kernel/macros.h>
 
 /**
  * @brief A basic doubly linked list
@@ -23,7 +23,7 @@ static inline void list_circular(struct list_head *head) {
  * @param head
  * @return struct list_head*
  */
-static inline struct list_head *list_remove(struct list_head *head) {
+static inline void list_remove(struct list_head *head) {
   head->prev->next = head->next;
   head->next->prev = head->prev;
 }

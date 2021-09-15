@@ -1,25 +1,25 @@
-#ifndef INCLUDES_KERNEL_PORT_IO
-#define INCLUDES_KERNEL_PORT_IO
+#ifndef INCLUDES_KERNEL_PORT_IO_H
+#define INCLUDES_KERNEL_PORT_IO_H
 
 // Port utils
-static inline unsigned char port_byte_in(unsigned short port) {
+static inline unsigned char inb(unsigned short port) {
   unsigned char result;
   __asm__("in %%dx, %%al" : "=a"(result) : "d"(port));
   return result;
 }
 
-static inline void port_byte_out(unsigned short port, unsigned char data) {
+static inline void outb(unsigned short port, unsigned char data) {
   __asm__("out %%al, %%dx" : : "a"(data), "d"(port));
 }
 
-static inline unsigned short port_word_in(unsigned short port) {
+static inline unsigned short inw(unsigned short port) {
   unsigned short result;
   __asm__("in %%dx, %%al" : "=a"(result) : "d"(port));
   return result;
 }
 
-static inline void port_word_out(unsigned short port, unsigned short data) {
+static inline void outw(unsigned short port, unsigned short data) {
   __asm__("out %%al, %%dx" : : "a"(data), "d"(port));
 }
 
-#endif // INCLUDES_KERNEL_PORT_IO
+#endif // INCLUDES_KERNEL_PORT_IO_H

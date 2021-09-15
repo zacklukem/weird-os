@@ -1,7 +1,7 @@
 #ifndef INCLUDES_KERNEL_TIMER
 #define INCLUDES_KERNEL_TIMER
 
-void timer_set_phase(int hz);
 void install_timer();
+void sleep(int ms);
 
 #endif // INCLUDES_KERNEL_TIMER

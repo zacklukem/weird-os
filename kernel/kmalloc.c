@@ -9,9 +9,6 @@
 extern uint32_t end;
 uint32_t _internal_placement_address = (uint32_t)&end;
 
-#define MAGIC 0x5d6d9cd6
-#define MIN_BLOCK_SIZE 4
-
 struct heap kheap_s;
 struct heap *kheap = 0;
 
@@ -271,3 +268,12 @@ uint32_t kmalloc_ap(uint32_t sz, uint32_t *phys) {
 }
 
 uint32_t kmalloc(uint32_t sz) { return kmalloc_internal(sz, 0, 0); }
+
+#ifdef TEST_RUN_MODE
+void reset_kmalloc() {
+  kheap->first_block->magic = MAGIC & 0xfffffffe; // Set last bit to 0
+  kheap->first_block->size = kheap->size - sizeof(struct block_header);
+  kheap->first_block->next = 0;
+  kheap->first_block->previous = 0;
+}
+#endif

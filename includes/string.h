@@ -13,4 +13,6 @@ void *memset(void *str, int c, size_t n);
 
 int strcmp(const char *str1, const char *str2);
 
+int memcmp(const void *s1, const void *s2, size_t n);
+
 #endif // INCLUDES_STRING

@@ -11,5 +11,15 @@
 			"cwd": "${workspaceRoot}",
 			"valuesFormatting": "parseText"
 		},
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "Attach to qemu test",
+			"executable": "./build/test_kernel.elf",
+			"target": ":1234",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"valuesFormatting": "parseText"
+		},
 	]
 }

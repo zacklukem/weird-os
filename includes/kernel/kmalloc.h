@@ -3,7 +3,12 @@
 
 #include <stdint.h>
 
+#define MAGIC 0x5d6d9cd6
+#define MIN_BLOCK_SIZE 4
+
 extern uint32_t _internal_placement_address;
+
+extern struct heap *kheap;
 
 struct block_header {
   /**
@@ -65,5 +70,9 @@ void init_kernal_heap(size_t size, void *start);
 struct heap create_heap(size_t size, void *start);
 void *alloc_internal(size_t size, int page_align, struct heap *heap);
 void free(void *mem);
+
+#ifdef TEST_RUN_MODE
+void reset_kmalloc();
+#endif
 
 #endif // INCLUDES_KERNEL_KMALLOC_H

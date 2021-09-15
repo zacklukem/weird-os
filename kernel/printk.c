@@ -25,10 +25,10 @@ FILE _k_stdout;
  * Get the cursor offset
  */
 uint16_t get_cursor() {
-  port_byte_out(REG_SCREEN_CTRL, 14);
-  int offset = port_byte_in(REG_SCREEN_DATA) << 8; // high byte
-  port_byte_out(REG_SCREEN_CTRL, 15);
-  offset += port_byte_in(REG_SCREEN_DATA); // low byte
+  outb(REG_SCREEN_CTRL, 14);
+  int offset = inb(REG_SCREEN_DATA) << 8; // high byte
+  outb(REG_SCREEN_CTRL, 15);
+  offset += inb(REG_SCREEN_DATA); // low byte
 
   return offset;
 }
@@ -37,10 +37,10 @@ uint16_t get_cursor() {
  * Set the cursor offset
  */
 void set_cursor(uint16_t offset) {
-  port_byte_out(REG_SCREEN_CTRL, 14);
-  port_byte_out(REG_SCREEN_DATA, (offset >> 8) & 0xff); // high byte
-  port_byte_out(REG_SCREEN_CTRL, 15);
-  port_byte_out(REG_SCREEN_DATA, offset & 0xff); // low byte
+  outb(REG_SCREEN_CTRL, 14);
+  outb(REG_SCREEN_DATA, (offset >> 8) & 0xff); // high byte
+  outb(REG_SCREEN_CTRL, 15);
+  outb(REG_SCREEN_DATA, offset & 0xff); // low byte
 }
 
 /**

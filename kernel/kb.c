@@ -86,7 +86,7 @@ static size_t shift_down = 0;
 void keyboard_handler(struct regs *r) {
   uint8_t scancode;
   // Read scancode from keyboard port
-  scancode = port_byte_in(0x60);
+  scancode = inb(0x60);
 
   // // If the top bit of the byte we read from the keyboard is
   // //  set, that means that a key has just been released

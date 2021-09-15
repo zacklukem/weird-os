@@ -11,7 +11,8 @@
 		"kstl.h": "c",
 		"stdio.h": "c",
 		"timer.h": "c",
-		"shell.h": "c"
+		"shell.h": "c",
+		"process.h": "c"
 	},
 	"C/C++ Include Guard.Comment Style": "Line",
 	"C/C++ Include Guard.Macro Type": "Filepath",

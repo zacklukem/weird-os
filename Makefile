@@ -1,5 +1,13 @@
+MAKEFLAGS += --silent
+
 BUILD_DIR := build
 KERNEL_SRC := kernel clib
+
+TEST_SRC := tests
+
+TEST_SRCS := $(shell find $(TEST_SRC) -name "*.c")
+TEST_OBJS := $(TEST_SRCS:%=$(BUILD_DIR)/%.o)
+TEST_DEPS := $(TEST_SRCS:%=$(BUILD_DIR)/%.d)
 
 # Find all the C and C++ files we want to compile
 KERNEL_C_SRCS := $(shell find $(KERNEL_SRC) -name "*.c")
@@ -7,6 +15,8 @@ KERNEL_C_DEPS := $(KERNEL_C_SRCS:%=$(BUILD_DIR)/%.d)
 
 KERNEL_SRCS := $(shell find $(KERNEL_SRC) -name "*.asm") $(KERNEL_C_SRCS)
 KERNEL_OBJS := $(KERNEL_SRCS:%=$(BUILD_DIR)/%.o)
+
+DEFS :=
 
 LD := i386-elf-ld
 LDFLAGS := -T link.ld
@@ -18,6 +28,9 @@ CFLAGS := -Werror -Wall -m32 -ffreestanding -g3 -F dwarf -MMD -MP -Iincludes
 AS := nasm
 ASFLAGS := -f elf32 -g3 -F dwarf
 
+.PHONY: kernel
+kernel: $(BUILD_DIR)/kernel.elf
+
 $(BUILD_DIR)/kernel.elf: $(KERNEL_OBJS)
 	printf "[$@] Linking...\r"
 	$(LD) $(LDFLAGS) $(KERNEL_OBJS) -o $@
@@ -26,7 +39,7 @@ $(BUILD_DIR)/kernel.elf: $(KERNEL_OBJS)
 $(BUILD_DIR)/%.c.o: %.c
 	printf "[$@] Compiling...\r"
 	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(DEFS) $(CFLAGS) -c $< -o $@
 	printf "[$@] Done.       \n"
 
 $(BUILD_DIR)/%.asm.o: %.asm
@@ -35,8 +48,34 @@ $(BUILD_DIR)/%.asm.o: %.asm
 	$(AS) $(ASFLAGS) $< -o $@
 	printf "[$@] Done.        \n"
 
+$(BUILD_DIR)/test_kernel.elf: tests/test/list_gen.h $(KERNEL_OBJS) $(TEST_OBJS)
+	printf "[$@] Linking...\r"
+	$(LD) $(LDFLAGS) $(KERNEL_OBJS) $(TEST_OBJS) -o $@
+	printf "[$@] Done.     \n"
+
+.PHONY: test
+test: DEFS=-DTEST_RUN_MODE
+test: test_setup $(BUILD_DIR)/test_kernel.elf
+	./test.sh
+
+.PHONY: test_debug
+test_debug: DEFS=-DTEST_RUN_MODE
+test_debug: test_setup $(BUILD_DIR)/test_kernel.elf
+	./test.sh -S -s
+
+.PHONY: qemu
+qemu: kernel
+	./qemu.sh
+
 .PHONY: clean
 clean:
 	rm -r $(BUILD_DIR)
 
+.PHONY: test_setup
+test_setup:
+	printf "[$@] Generating...\r"
+	./tests/test/setup.sh
+	printf "[$@] Done.        \n"
+
 -include $(KERNEL_C_DEPS)
+-include $(TEST_DEPS)

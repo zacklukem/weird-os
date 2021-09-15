@@ -56,6 +56,7 @@ int vfprintf(FILE *f, const char *format, va_list args) {
       case 'd': {
         int value = va_arg(args, int);
         char buf[16];
+        memset(buf, 0, 16);
         itoa(value, buf, 10);
         fputs(buf, f);
       } break;
@@ -63,6 +64,7 @@ int vfprintf(FILE *f, const char *format, va_list args) {
         uint32_t value = va_arg(args, uint32_t);
         uint32_t tmp_value = value;
         char buf[16];
+        memset(buf, 0, 16);
 
         for (int i = 7; i >= 0; --i) {
           char v = tmp_value & 0xf;
