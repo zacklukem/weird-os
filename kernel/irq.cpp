@@ -2,22 +2,26 @@
 #include <kernel/irq.h>
 #include <kernel/port_io.h>
 
-extern void irq0();
-extern void irq1();
-extern void irq2();
-extern void irq3();
-extern void irq4();
-extern void irq5();
-extern void irq6();
-extern void irq7();
-extern void irq8();
-extern void irq9();
-extern void irq10();
-extern void irq11();
-extern void irq12();
-extern void irq13();
-extern void irq14();
-extern void irq15();
+extern "C" {
+void irq0();
+void irq1();
+void irq2();
+void irq3();
+void irq4();
+void irq5();
+void irq6();
+void irq7();
+void irq8();
+void irq9();
+void irq10();
+void irq11();
+void irq12();
+void irq13();
+void irq14();
+void irq15();
+}
+
+typedef void (*irq_handler_t)(struct regs *r);
 
 /**
  * the list of function pointers to irq routines
@@ -75,11 +79,11 @@ void irq_install() {
 /**
  * Handle IRQ's
  */
-void irq_handler(struct regs *r) {
-  void (*handler)(struct regs * r);
+extern "C" void irq_handler(struct regs *r) {
+  irq_handler_t handler;
 
   // See if handler has been set and if so, call it
-  handler = irq_routines[r->int_no - 32];
+  handler = (irq_handler_t)irq_routines[r->int_no - 32];
   if (handler) {
     handler(r);
   }

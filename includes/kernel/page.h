@@ -48,7 +48,7 @@ void initialise_paging();
  * Causes the specified page directory to be loaded into the
  * CR3 register.
  */
-void switch_page_directory(struct page_directory *new);
+void switch_page_directory(struct page_directory *new_page);
 
 /**
  * Retrieves a pointer to the page required.

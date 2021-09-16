@@ -28,9 +28,9 @@ static inline int __test_assert__(struct __test_result__ *result, int cond,
     if (__test_assert__(__result__, (cond), __LINE__, __FILE__, #cond))        \
       return;                                                                  \
   }
+#define DEFINE_TEST_CASE(test_name)                                            \
+  void test_name(struct __test_result__ *__result__);
 
-#define RUN_TEST_CASE(test_name)                                               \
-  extern void test_name(struct __test_result__ *__result__);                   \
-  __run_test_case__(test_name, #test_name);
+#define RUN_TEST_CASE(test_name) __run_test_case__(test_name, #test_name);
 
 #endif // TESTS_TESTS_H

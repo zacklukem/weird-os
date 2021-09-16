@@ -48,7 +48,7 @@ static inline struct hashmap make_int_hashmap() {
 
 static inline void init_hashmap_node(struct hashmap_node *node, size_t key) {
   node->key = key;
-  node->next = (void *)0;
+  node->next = nullptr;
 }
 
 static inline void hashmap_add(struct hashmap *map, struct hashmap_node *node) {
@@ -71,7 +71,7 @@ static inline struct hashmap_node *hashmap_get(struct hashmap *map,
   while (node && !map->pair_eq(key, node->key))
     node = node->next;
   if (!node) // Maybe unnessesary
-    return (void *)0;
+    return nullptr;
   assert(map->pair_eq(key, node->key) && "Key failure");
   return node;
 }

@@ -1,4 +1,3 @@
-#include <kernel/acpi.h>
 #include <kernel/gdt.h>
 #include <kernel/idt.h>
 #include <kernel/irq.h>
@@ -12,10 +11,13 @@
 #include <kernel/vector.h>
 #include <stdio.h>
 
+#ifdef TEST_RUN_MODE
+extern "C" void __run_kernel_tests__();
+#endif
 /**
  * Kernel main function.  Called by entry.asm
  */
-void __kernel_main__() {
+extern "C" void __kernel_main__() {
   k_init_stdout();
 
   cleark();
@@ -44,8 +46,7 @@ void __kernel_main__() {
   __asm__("sti");
 
 #ifdef TEST_RUN_MODE
-  extern void run_kernel_tests();
-  run_kernel_tests();
+  __run_kernel_tests__();
 #endif
 
   while (1)

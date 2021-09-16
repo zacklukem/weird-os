@@ -81,13 +81,13 @@ static struct block_header *make_aligned_block(size_t size,
   // for now just move the block and resize previous block
 
   block->size -= distance;
-  block->previous->next = (void *)header_pos;
+  block->previous->next = (block_header *)header_pos;
   block->previous->size += distance;
 
   // move the header to its new home
   memcpy((void *)header_pos, block, sizeof(struct block_header));
 
-  return (void *)header_pos;
+  return (block_header *)header_pos;
 }
 
 static struct block_header *get_suitable_block(size_t size, int page_align,

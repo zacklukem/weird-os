@@ -55,7 +55,7 @@ static inline void *__vector_at(struct vector *vec, size_t index,
   assert(element_size == vec->_element_size &&
          "Invalid element type for vector");
   assert(vec->_size > index && "Index out of bounds");
-  return vec->_data + index * element_size;
+  return (void *)((size_t)vec->_data + index * element_size);
 }
 
 /**

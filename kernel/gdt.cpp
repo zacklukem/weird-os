@@ -15,7 +15,7 @@ struct gdt_entry {
   uint8_t base_high;   ///< high bytes of the base
 } __attribute__((packed));
 // Sanity check to make sure the structure is properly packed
-_Static_assert(sizeof(struct gdt_entry) == 8, "Structure improperly packed");
+static_assert(sizeof(struct gdt_entry) == 8, "Structure improperly packed");
 
 /**
  * GDT descriptor.  Limit describes the size of the GDT minus one and the base
@@ -41,7 +41,7 @@ struct gdt_ptr gp;
  * Implemented in assembly. Loads the gdt with the lgdt instruction and sets
  * the segment registers.
  */
-extern void gdt_flush();
+extern "C" void gdt_flush();
 
 /**
  * Initializes a gdt segment by spliting up the base and limit, then setting

@@ -5,12 +5,12 @@ KERNEL_SRC := kernel clib
 
 TEST_SRC := tests
 
-TEST_SRCS := $(shell find $(TEST_SRC) -name "*.c")
+TEST_SRCS := $(shell find $(TEST_SRC) -name "*.cpp")
 TEST_OBJS := $(TEST_SRCS:%=$(BUILD_DIR)/%.o)
 TEST_DEPS := $(TEST_SRCS:%=$(BUILD_DIR)/%.d)
 
 # Find all the C and C++ files we want to compile
-KERNEL_C_SRCS := $(shell find $(KERNEL_SRC) -name "*.c")
+KERNEL_C_SRCS := $(shell find $(KERNEL_SRC) -name "*.cpp")
 KERNEL_C_DEPS := $(KERNEL_C_SRCS:%=$(BUILD_DIR)/%.d)
 
 KERNEL_SRCS := $(shell find $(KERNEL_SRC) -name "*.asm") $(KERNEL_C_SRCS)
@@ -21,8 +21,8 @@ DEFS :=
 LD := i386-elf-ld
 LDFLAGS := -T link.ld
 
-CC := i386-elf-gcc
-CFLAGS := -Werror -Wall -m32 -ffreestanding -g3 -F dwarf -MMD -MP -Iincludes
+CC := i386-elf-g++
+CFLAGS := -Wall -m32 -ffreestanding -g3 -F dwarf -MMD -MP -Iincludes
 #CFLAGS := -m32 -MMD -MP -g3 -F dwarf -Wall -O -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -Iincludes
 
 AS := nasm
@@ -37,7 +37,7 @@ $(BUILD_DIR)/kernel.elf: $(KERNEL_OBJS)
 	$(LD) $(LDFLAGS) $(KERNEL_OBJS) -o $@
 	printf "[$@] Done.     \n"
 
-$(BUILD_DIR)/%.c.o: %.c
+$(BUILD_DIR)/%.cpp.o: %.cpp
 	printf "[$@] Compiling...\r"
 	mkdir -p $(dir $@)
 	$(CC) $(DEFS) $(CFLAGS) -c $< -o $@

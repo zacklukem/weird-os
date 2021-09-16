@@ -15,7 +15,7 @@ struct idt_entry {   // https://wiki.osdev.org/Interrupt_Descriptor_Table
   uint16_t offset_2; ///< offset bits 16..31
 } __attribute__((packed));
 
-_Static_assert(sizeof(struct idt_entry) == 8, "Packing error");
+static_assert(sizeof(struct idt_entry) == 8, "Packing error");
 
 /**
  * The IDT descriptor that is passed to the lidt instruction in order to
@@ -25,7 +25,7 @@ struct idt_desc {
   uint16_t size;    ///< size - 1
   uint32_t address; ///< idt_start
 } __attribute__((packed));
-_Static_assert(sizeof(struct idt_desc) == 6, "Packing error");
+static_assert(sizeof(struct idt_desc) == 6, "Packing error");
 
 /**
  * The IDT
@@ -41,44 +41,46 @@ struct idt_desc idt_descriptor;
  * Asm function implemented in idt.s which loads the idt from the idt_descriptor
  * with the lidt instruction
  */
-extern void asm_idt_load();
+extern "C" void asm_idt_load();
 
 // ISR's 0-31 (exceptions)
-extern void isr0();
-extern void isr1();
-extern void isr2();
-extern void isr3();
-extern void isr4();
-extern void isr5();
-extern void isr6();
-extern void isr7();
-extern void isr8();
-extern void isr9();
-extern void isr10();
-extern void isr11();
-extern void isr12();
-extern void isr13();
-extern void isr14();
-extern void isr15();
-extern void isr16();
-extern void isr17();
-extern void isr18();
-extern void isr19();
-extern void isr20();
-extern void isr21();
-extern void isr22();
-extern void isr23();
-extern void isr24();
-extern void isr25();
-extern void isr26();
-extern void isr27();
-extern void isr28();
-extern void isr29();
-extern void isr30();
-extern void isr31();
+extern "C" {
+void isr0();
+void isr1();
+void isr2();
+void isr3();
+void isr4();
+void isr5();
+void isr6();
+void isr7();
+void isr8();
+void isr9();
+void isr10();
+void isr11();
+void isr12();
+void isr13();
+void isr14();
+void isr15();
+void isr16();
+void isr17();
+void isr18();
+void isr19();
+void isr20();
+void isr21();
+void isr22();
+void isr23();
+void isr24();
+void isr25();
+void isr26();
+void isr27();
+void isr28();
+void isr29();
+void isr30();
+void isr31();
 
 // ISR 80 (syscall)
-extern void isr80();
+void isr80();
+}
 
 // Set enable bit
 #define ENABLED 0x80
@@ -204,7 +206,7 @@ void init_idt() {
 /**
  * Handle syscalls (called from assembly isr)
  */
-void syscall_handler(int eax) {
+extern "C" void syscall_handler(int eax) {
   char data[16];
   itoa(eax, data, 10);
   printk("Handle syscall: ");
@@ -215,7 +217,7 @@ void syscall_handler(int eax) {
 /**
  * Handle cpu exceptions
  */
-void cpu_fault_handler(struct regs *r) {
+extern "C" void cpu_fault_handler(struct regs *r) {
   if (r->int_no == 14) { // page fault
     // A page fault has occurred.
     // The faulting address is stored in the CR2 register.
