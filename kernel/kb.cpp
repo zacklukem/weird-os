@@ -1,6 +1,6 @@
-#include <kernel/irq.h>
+#include <arch/x86/irq.h>
+#include <arch/x86/port_io.h>
 #include <kernel/kb.h>
-#include <kernel/port_io.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -83,7 +83,7 @@ static size_t shift_down = 0;
 /**
  * Handle Keyboard Interupt
  */
-void keyboard_handler(struct regs *r) {
+void keyboard_handler(regs *r) {
   uint8_t scancode;
   // Read scancode from keyboard port
   scancode = inb(0x60);

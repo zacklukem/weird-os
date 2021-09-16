@@ -1,6 +1,6 @@
-#include <kernel/idt.h>
-#include <kernel/irq.h>
-#include <kernel/port_io.h>
+#include <arch/x86/idt.h>
+#include <arch/x86/irq.h>
+#include <arch/x86/port_io.h>
 
 extern "C" {
 void irq0();
@@ -21,19 +21,19 @@ void irq14();
 void irq15();
 }
 
-typedef void (*irq_handler_t)(struct regs *r);
+typedef void (*irq_handler_t)(regs *r);
 
 /**
  * the list of function pointers to irq routines
  */
-static void *irq_routines[16] = {0, 0, 0, 0, 0, 0, 0, 0,
-                                 0, 0, 0, 0, 0, 0, 0, 0};
+static irq_handler_t irq_routines[16] = {0, 0, 0, 0, 0, 0, 0, 0,
+                                         0, 0, 0, 0, 0, 0, 0, 0};
 
 /**
  * Set an IRQ routine to a particular function
  */
-void install_irq_routine(size_t port, void (*handler)(struct regs *r)) {
-  irq_routines[port] = (void *)handler;
+void install_irq_routine(size_t port, irq_handler_t handler) {
+  irq_routines[port] = handler;
 }
 
 /**
@@ -79,7 +79,7 @@ void irq_install() {
 /**
  * Handle IRQ's
  */
-extern "C" void irq_handler(struct regs *r) {
+extern "C" void irq_handler(regs *r) {
   irq_handler_t handler;
 
   // See if handler has been set and if so, call it

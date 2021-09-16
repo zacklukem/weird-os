@@ -1,12 +1,12 @@
-#include <kernel/gdt.h>
-#include <kernel/idt.h>
-#include <kernel/irq.h>
+#include <arch/x86/gdt.h>
+#include <arch/x86/idt.h>
+#include <arch/x86/irq.h>
+#include <assert.h>
 #include <kernel/kb.h>
 #include <kernel/kmalloc.h>
 #include <kernel/page.h>
 #include <kernel/printk.h>
 #include <kernel/serial.h>
-#include <kernel/shell.h>
 #include <kernel/timer.h>
 #include <kernel/vector.h>
 #include <stdio.h>
@@ -14,6 +14,7 @@
 #ifdef TEST_RUN_MODE
 extern "C" void __run_kernel_tests__();
 #endif
+
 /**
  * Kernel main function.  Called by entry.asm
  */

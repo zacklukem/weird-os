@@ -1,4 +1,5 @@
 #include <string.h>
+#pragma GCC diagnostic ignored "-Wpointer-arith"
 
 /**
  * Convert a int to a string
@@ -36,13 +37,13 @@ int itoa(int value, char *out, int base) {
 }
 
 void memcpy(void *dest, const void *src, size_t n) {
-  for (int i = 0; i < n; ++i) {
+  for (size_t i = 0; i < n; ++i) {
     ((char *)dest)[i] = ((char *)src)[i];
   }
 }
 
 void *memset(void *str, int c, size_t n) {
-  for (int i = 0; i < n; ++i) {
+  for (size_t i = 0; i < n; ++i) {
     ((char *)str)[i] = c;
   }
   return str;
@@ -60,7 +61,6 @@ int strcmp(const char *str1, const char *str2) {
 // https://opensource.apple.com/source/tcl/tcl-5/tcl/compat/memcmp.c
 int memcmp(const void *s1, const void *s2, size_t n) {
   unsigned char u1, u2;
-
   for (; n--; s1++, s2++) {
     u1 = *(unsigned char *)s1;
     u2 = *(unsigned char *)s2;

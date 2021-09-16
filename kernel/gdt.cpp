@@ -1,4 +1,4 @@
-#include <kernel/gdt.h>
+#include <arch/x86/gdt.h>
 #include <stdint.h>
 
 /**
@@ -15,7 +15,7 @@ struct gdt_entry {
   uint8_t base_high;   ///< high bytes of the base
 } __attribute__((packed));
 // Sanity check to make sure the structure is properly packed
-static_assert(sizeof(struct gdt_entry) == 8, "Structure improperly packed");
+static_assert(sizeof(gdt_entry) == 8, "Structure improperly packed");
 
 /**
  * GDT descriptor.  Limit describes the size of the GDT minus one and the base
@@ -30,7 +30,7 @@ struct gdt_ptr {
  * The GDT itself, contining one null entry, the code segment entry, and the
  * data segment entry
  */
-static struct gdt_entry gdt[3];
+static gdt_entry gdt[3];
 
 /**
  * The GDT descriptor to be passed to the lgdt instruction
@@ -65,7 +65,7 @@ static void gdt_set_gate(int num, uint32_t base, uint32_t limit,
 
 void gdt_install() {
   // Setup GDT descriptor
-  gp.limit = (sizeof(struct gdt_entry) * 3) - 1;
+  gp.limit = (sizeof(gdt_entry) * 3) - 1;
   gp.base = (size_t)&gdt;
 
   // NULL descriptor

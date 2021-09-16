@@ -1,6 +1,6 @@
-#include <kernel/idt.h>
+#include <arch/x86/idt.h>
+#include <arch/x86/regs.h>
 #include <kernel/printk.h>
-#include <kernel/regs.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -93,7 +93,7 @@ void isr80();
 /**
  * The list of exception messeges for isr's 0-31
  */
-static char *exception_messages[32] = {
+static const char *exception_messages[32] = {
     "Division By Zero Exception",
     "Debug Exception",
     "Non Maskable Interrupt Exception",

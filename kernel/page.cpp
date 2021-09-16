@@ -7,8 +7,8 @@
 uint32_t *frames;
 uint32_t nframes;
 
-struct page_directory *kernel_directory;
-struct page_directory *current_directory;
+page_directory *kernel_directory;
+page_directory *current_directory;
 
 // Macros used in the bitset algorithms.
 #define INDEX_FROM_BIT(a) (a / (8 * 4))
@@ -55,7 +55,7 @@ static uint32_t first_frame() {
 }
 
 // Function to allocate a frame.
-void alloc_frame(struct page *page, int is_kernel, int is_writeable) {
+void alloc_frame(page *page, int is_kernel, int is_writeable) {
   if (page->frame != 0) {
     return; // Frame was already allocated, return straight away.
   }
@@ -69,7 +69,7 @@ void alloc_frame(struct page *page, int is_kernel, int is_writeable) {
 }
 
 // Function to deallocate a frame.
-void free_frame(struct page *page) {
+void free_frame(page *page) {
   uint32_t frame;
   if (!(frame = page->frame)) {
     return; // The given page didn't actually have an allocated frame!
@@ -96,9 +96,8 @@ void initialise_paging() {
   memset(frames, 0, INDEX_FROM_BIT(nframes));
 
   // Let's make a page directory.
-  kernel_directory =
-      (struct page_directory *)kmalloc_a(sizeof(struct page_directory));
-  memset(kernel_directory, 0, sizeof(struct page_directory));
+  kernel_directory = (page_directory *)kmalloc_a(sizeof(page_directory));
+  memset(kernel_directory, 0, sizeof(page_directory));
   current_directory = kernel_directory;
 
   // We need to identity map (phys addr = virt addr) from
@@ -132,7 +131,7 @@ void initialise_paging() {
  * Causes the specified page directory to be loaded into the
  * CR3 register.
  */
-void switch_page_directory(struct page_directory *dir) {
+void switch_page_directory(page_directory *dir) {
   current_directory = dir;
   __asm__ __volatile__("mov %0, %%cr3" ::"r"(&dir->tables_physical));
   uint32_t cr0;
@@ -141,7 +140,7 @@ void switch_page_directory(struct page_directory *dir) {
   __asm__ __volatile__("mov %0, %%cr0" ::"r"(cr0));
 }
 
-struct page *get_page(uint32_t address, int make, struct page_directory *dir) {
+page *get_page(uint32_t address, int make, page_directory *dir) {
   // Turn the address into an index.
   address /= 0x1000;
   // Find the page table containing this address.
@@ -151,8 +150,7 @@ struct page *get_page(uint32_t address, int make, struct page_directory *dir) {
     return &dir->tables[table_idx]->pages[address % 1024];
   } else if (make) {
     uint32_t tmp;
-    dir->tables[table_idx] =
-        (struct page_table *)kmalloc_ap(sizeof(struct page_table), &tmp);
+    dir->tables[table_idx] = (page_table *)kmalloc_ap(sizeof(page_table), &tmp);
     memset(dir->tables[table_idx], 0, 0x1000);
     dir->tables_physical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
     return &dir->tables[table_idx]->pages[address % 1024];
@@ -164,4 +162,4 @@ struct page *get_page(uint32_t address, int make, struct page_directory *dir) {
 /**
  * Handler for page faults.
  */
-void page_fault(struct regs *regs) {}
+void page_fault(regs *regs) {}

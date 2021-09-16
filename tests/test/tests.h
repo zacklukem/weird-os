@@ -8,7 +8,8 @@ struct __test_result__ {
   const char *message;
 };
 
-#define TEST_CASE(test_name) void test_name(struct __test_result__ *__result__)
+#define TEST_CASE(test_name)                                                   \
+  extern "C" void test_name(struct __test_result__ *__result__)
 
 static inline int __test_assert__(struct __test_result__ *result, int cond,
                                   int line, const char *file,
@@ -29,7 +30,7 @@ static inline int __test_assert__(struct __test_result__ *result, int cond,
       return;                                                                  \
   }
 #define DEFINE_TEST_CASE(test_name)                                            \
-  void test_name(struct __test_result__ *__result__);
+  extern "C" void test_name(struct __test_result__ *__result__);
 
 #define RUN_TEST_CASE(test_name) __run_test_case__(test_name, #test_name);
 

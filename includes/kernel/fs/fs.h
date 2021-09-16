@@ -1,25 +1,16 @@
-#ifndef INCLUDES_KERNEL_FS_H
-#define INCLUDES_KERNEL_FS_H
+#ifndef KERNEL_FS_FS_H
+#define KERNEL_FS_FS_H
 
 #include <kernel/fs/flags.h>
-#include <kernel/hashmap.h>
 #include <kernel/kmalloc.h>
-#include <kernel/list.h>
-#include <kernel/llist.h>
 #include <stdint.h>
+#include <util/hashmap.h>
+#include <util/list.h>
+#include <util/llist.h>
+
+namespace fs {
 
 #define FD_MAX 512 // Max file descriptors
-
-typedef uint32_t uid_t;
-typedef uint32_t ino_t;
-typedef uint32_t gid_t;
-typedef uint32_t off_t;
-typedef uint32_t dev_t;
-typedef uint32_t mode_t;
-typedef uint32_t nlink_t;
-typedef uint32_t time_t;
-typedef uint32_t blksize_t;
-typedef uint32_t blkcnt_t;
 
 int init_fs();
 
@@ -49,9 +40,6 @@ struct file {
   int oflag;
   off_t offset;
 };
-void init_inode(struct inode *inode, mode_t mode);
-
-void disuse_file(struct file *file);
 
 struct inode;
 
@@ -59,23 +47,18 @@ struct dirent {
   // POSIX compliance
   char ident[0xff];
   ino_t inode_id;
-  struct inode *inode;
 
+  struct inode &inode;
   // For cacheing
-  struct list_head siblings;
-  struct dirent *parent;      // Must be cached if exists
-  struct list_head *children; // Children (if cached)
-};
-
-struct inode_ops {
-  ssize_t (*read)(struct inode *inode, void *buf, size_t nbyte, off_t offset);
-  ssize_t (*write)(struct inode *inode, const void *buf, size_t n,
-                   off_t offset);
-  const struct list_head *(*opendir)(struct inode *inode);
+  util::list<dirent &> siblings;
+  dirent &parent;
+  util::list<dirent &> children;
 };
 
 // https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/stat.h.html
-struct inode {
+class inode {
+public:
+  inode(struct dirent &dirent, mode_t mode) : mode(mode), dirent(dirent) {}
   dev_t device;       // Device ID of device containing file.
   ino_t id;           // File serial number.
   mode_t mode;        // Mode of file (see below).
@@ -87,12 +70,18 @@ struct inode {
   time_t access_time; // Time of last access.
   time_t mod_time;    // Time of last data modification.
   time_t stat_time;   // Time of last status change.
-  struct inode_ops ops;
-  struct dirent *dirent;
+
+  virtual ssize_t read(void *buf, size_t nbyte, off_t offset);
+  virtual ssize_t write(const void *buf, size_t n, off_t offset);
+  virtual const struct list_head opendir();
+
+private:
+  struct dirent &dirent;
   int num_links; // Number of open instances of this file
-  struct hashmap_node cache;
   off_t buf_size;
   void *buf;
 };
 
-#endif // INCLUDES_KERNEL_FS_H
+} // namespace fs
+
+#endif // KERNEL_FS_FS_H

@@ -1,7 +1,7 @@
 #ifndef INCLUDES_KERNEL_SERIAL_H
 #define INCLUDES_KERNEL_SERIAL_H
 
-#include <kernel/port_io.h>
+#include <arch/x86/port_io.h>
 
 #define COM1 0x3F8
 

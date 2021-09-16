@@ -4,7 +4,7 @@
 #include <kernel/fs/fs.h>
 
 struct process {
-  struct fdtable fdtable;
+  fs::fdtable fdtable;
 };
 
 extern struct process kernel_process;

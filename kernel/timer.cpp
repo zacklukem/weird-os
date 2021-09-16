@@ -1,11 +1,11 @@
-#include <kernel/irq.h>
-#include <kernel/port_io.h>
+#include <arch/x86/irq.h>
+#include <arch/x86/port_io.h>
 #include <kernel/timer.h>
 #include <stdint.h>
 
 uint32_t timer_ticks = 0;
 
-void sleep(int ms) {
+void sleep(uint32_t ms) {
   uint32_t timer_start = timer_ticks;
   while (timer_ticks - timer_start < ms) {
     __asm__("hlt");

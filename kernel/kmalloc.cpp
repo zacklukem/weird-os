@@ -1,3 +1,6 @@
+// Expect lots of pointer math here
+#pragma GCC diagnostic ignored "-Wpointer-arith"
+
 #include <assert.h>
 #include <kernel/kmalloc.h>
 #include <kernel/page.h>
@@ -59,7 +62,7 @@ void init_kernal_heap(size_t size, void *start) {
 }
 
 static inline void *get_memory_address(struct block_header *block) {
-  return ((void *)block) + sizeof(struct block_header);
+  return (void *)((size_t)block) + sizeof(block_header);
 }
 
 static inline uint32_t get_distance_to_next_page(uint32_t addr) {
@@ -134,7 +137,7 @@ static struct block_header *get_suitable_block(size_t size, int page_align,
 static void create_new_block_header(struct block_header *block, size_t size) {
   // create a new block header
   struct block_header *new_block =
-      (struct block_header *)(((void *)block) + size +
+      (struct block_header *)(((size_t)block) + size +
                               sizeof(struct block_header));
   if (block->next) {
     block->next->previous = new_block;
@@ -155,6 +158,7 @@ void *alloc_internal(size_t size, int page_align, struct heap *heap) {
   if (block->size - size > sizeof(struct block_header) + MIN_BLOCK_SIZE) {
     create_new_block_header(block, size);
   }
+  block->magic = MAGIC | 0x1;
   // Return pointer to the data not the block header
   return get_memory_address(block);
 }
@@ -166,7 +170,7 @@ void *alloc_internal(size_t size, int page_align, struct heap *heap) {
 void free(void *mem) {
   // Get pointer to the block header relative to the data
   struct block_header *header =
-      (struct block_header *)(mem - sizeof(struct block_header));
+      (struct block_header *)((size_t)mem - sizeof(struct block_header));
   assert(is_valid(header->magic) && "Heap block is invalid!");
   header->magic &= 0xfffffffe;
 
@@ -268,6 +272,28 @@ uint32_t kmalloc_ap(uint32_t sz, uint32_t *phys) {
 }
 
 uint32_t kmalloc(uint32_t sz) { return kmalloc_internal(sz, 0, 0); }
+
+// Define c++ new and delete ops
+void *operator new(size_t sz) {
+  assert(kheap &&
+         "Kernel heap must be initialized before using the new operator");
+  if (sz == 0)
+    ++sz; // avoid std::malloc(0) which may return nullptr on success
+
+  void *ptr = (void *)kmalloc(sz);
+  assert(ptr && "New error");
+  return ptr;
+}
+
+void operator delete(void *ptr) noexcept {
+  assert(kheap && "Kernel heap must be initialized before deleting");
+  free(ptr);
+}
+
+void operator delete(void *ptr, size_t sz) noexcept {
+  assert(kheap && "Kernel heap must be initialized before deleting");
+  free(ptr);
+}
 
 #ifdef TEST_RUN_MODE
 void reset_kmalloc() {

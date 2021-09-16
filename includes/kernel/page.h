@@ -1,7 +1,7 @@
 #ifndef INCLUDES_KERNEL_PAGE_H
 #define INCLUDES_KERNEL_PAGE_H
 
-#include <kernel/regs.h>
+#include <arch/x86/regs.h>
 
 extern struct page_directory *kernel_directory;
 extern struct page_directory *current_directory;

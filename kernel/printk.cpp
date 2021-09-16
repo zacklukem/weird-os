@@ -1,4 +1,4 @@
-#include <kernel/port_io.h>
+#include <arch/x86/port_io.h>
 #include <kernel/printk.h>
 #include <stdarg.h>
 #include <stdint.h>

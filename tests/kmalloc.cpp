@@ -1,5 +1,6 @@
 #include "test/tests.h"
 #include <kernel/kmalloc.h>
+#pragma GCC diagnostic ignored "-Wpointer-arith"
 
 static inline struct block_header *get_header(void *mem) {
   return (struct block_header *)(mem - sizeof(struct block_header));
@@ -17,6 +18,7 @@ TEST_CASE(kernel_heap_kmalloc_single) {
   ASSERT(blk->next->previous == blk);
   ASSERT(blk->next->next == 0);
   ASSERT(blk->next->magic == (MAGIC & 0xfffffffe));
+  // reset_kmalloc();
 }
 
 /**
@@ -39,6 +41,7 @@ TEST_CASE(kernel_heap_kmalloc_multi_ordered) {
   ASSERT(head[9]->magic == (MAGIC | 0x1));
   ASSERT(head[9]->next->previous == head[9]);
   ASSERT(head[9]->next->magic == (MAGIC & 0xfffffffe));
+  // reset_kmalloc();
 }
 
 TEST_CASE(kernel_heap_merge_free) {
@@ -56,4 +59,5 @@ TEST_CASE(kernel_heap_merge_free) {
   ASSERT(a_header->next->next == d_header);
   ASSERT(a_header->next->magic == (MAGIC & 0xfffffffe));
   ASSERT(a_header->next == get_header(b));
+  // reset_kmalloc();
 }
