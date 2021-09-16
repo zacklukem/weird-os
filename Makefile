@@ -29,6 +29,7 @@ AS := nasm
 ASFLAGS := -f elf32 -g3 -F dwarf
 
 .PHONY: kernel
+kernel: DEFS=
 kernel: $(BUILD_DIR)/kernel.elf
 
 $(BUILD_DIR)/kernel.elf: $(KERNEL_OBJS)

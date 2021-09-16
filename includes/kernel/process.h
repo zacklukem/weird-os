@@ -1,7 +1,7 @@
 #ifndef INCLUDES_KERNEL_PROCESS_H
 #define INCLUDES_KERNEL_PROCESS_H
 
-#include <kernel/fs.h>
+#include <kernel/fs/fs.h>
 
 struct process {
   struct fdtable fdtable;

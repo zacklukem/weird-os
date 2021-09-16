@@ -69,7 +69,9 @@ static inline void list_insert(struct list_head *head,
   head->next = source;
   source->prev = head;
   source->next = after;
-  after->prev = source;
+  if (after) {
+    after->prev = source;
+  }
 }
 
 /**

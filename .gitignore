@@ -4,3 +4,4 @@ build/
 html/
 man/
 tests/test/list_gen.h
+null.d
