@@ -70,3 +70,10 @@ int memcmp(const void *s1, const void *s2, size_t n) {
   }
   return 0;
 }
+
+size_t strlen(const char *str) {
+  size_t len;
+  for (len = 0; str[len]; len++) {
+  }
+  return len;
+}

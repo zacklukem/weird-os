@@ -10,7 +10,7 @@ inline constexpr nullopt_t nullopt = nullopt_t{};
 
 template <class T> class optional {
 public:
-  constexpr optional(const T &value) : data(value), _has_value(true){};
+  constexpr optional(T &value) : data(value), _has_value(true){};
   constexpr optional(nullopt_t) : _has_value(false){};
   constexpr optional &operator=(nullopt_t) {
     this->_has_value = false;

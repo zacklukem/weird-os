@@ -287,13 +287,17 @@ void *operator new(size_t sz) {
 
 void operator delete(void *ptr) noexcept {
   assert(kheap && "Kernel heap must be initialized before deleting");
-  free(ptr);
+  if (ptr)
+    free(ptr);
 }
 
 void operator delete(void *ptr, size_t sz) noexcept {
   assert(kheap && "Kernel heap must be initialized before deleting");
-  free(ptr);
+  if (ptr)
+    free(ptr);
 }
+
+extern "C" void __cxa_pure_virtual() { assert(false && "virtual death"); }
 
 #ifdef TEST_RUN_MODE
 void reset_kmalloc() {

@@ -15,4 +15,6 @@ int strcmp(const char *str1, const char *str2);
 
 int memcmp(const void *s1, const void *s2, size_t n);
 
+size_t strlen(const char *str);
+
 #endif // INCLUDES_STRING

@@ -8,29 +8,31 @@
 #include <string.h>
 #include <util/macros.h>
 #include <util/optional.h>
+#include <util/string.h>
 
 #define HASH_RANGE 0xff
 
 namespace util {
 
 template <class K, class V> struct hashmap_node {
-  hashmap_node(const K &key, const V &value)
-      : key(key), value(value), next(nullptr) {}
+  hashmap_node(const K &key, V value) : key(key), value(value), next(nullptr) {}
   K key;
   V value;
   hashmap_node<K, V> *next;
 };
 
-static inline uint8_t hash(unsigned char *str) {
+static inline uint8_t hash(const char *str) {
   uint32_t hash = 5381;
   int c;
-  while ((c = *str++))
+  while ((c = (unsigned char)*str++))
     hash = ((hash << 5) + hash) + c; // hash*33 + c
   return (uint8_t)(hash % 0x100);
 }
 
+static inline uint8_t hash(const string &str) { return hash(str.cstr()); }
+
 static inline uint8_t hash(size_t i) {
-  unsigned char ci[sizeof(size_t) + 1];
+  char ci[sizeof(size_t) + 1];
   ci[sizeof(size_t)] = 0;
   *((size_t *)ci) = i;
   return hash(ci);
@@ -51,7 +53,7 @@ public:
     return node->value;
   };
 
-  void set(const K &key, const V &value) {
+  void set(const K &key, V value) {
     int hashed = hash(key);
     if (table[hashed] == nullptr) {
       table[hashed] = new hashmap_node<K, V>(key, value);
