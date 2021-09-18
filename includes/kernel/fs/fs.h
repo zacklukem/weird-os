@@ -6,49 +6,52 @@
 #include <stdint.h>
 #include <util/hashmap.h>
 #include <util/list.h>
-#include <util/llist.h>
+#include <util/rc.h>
 
 namespace fs {
 
 #define FD_MAX 512 // Max file descriptors
 
+// Forward declarations
+class inode;
+struct dirent;
+struct file;
+struct fdtable;
+
 int init_fs();
 
-struct inode *create_fifo(const char *path);
+inode *create_fifo(const char *path);
 
 // Syscalls for filesystem
 ssize_t syscall_read(int fildes, void *buf, size_t nbyte, off_t offset);
 ssize_t syscall_write(int fildes, const void *buf, size_t n, off_t offset);
 int syscall_close(int fildes);
 int syscall_open(const char *path, int oflag, ...);
-const struct list_head *syscall_fdopendir(int fildes);
-const struct list_head *syscall_opendir(const char *path);
-struct dirent *syscall_readdir(struct list_head **head);
+const util::list_iterator<dirent> *syscall_fdopendir(int fildes);
+const util::list_iterator<dirent> *syscall_opendir(const char *path);
 
-void open_inode(struct inode *inode);
-
-ino_t get_new_inode_id();
+void open_inode(inode *inode);
 
 struct fdtable {
-  struct file *data[FD_MAX];
+  file *data[FD_MAX];
   size_t last_desc;
 };
 
 struct file {
   size_t references;
-  struct inode *inode;
+  inode *m_inode;
   int oflag;
   off_t offset;
 };
 
-struct inode;
+class inode;
 
 struct dirent {
   // POSIX compliance
   char ident[0xff];
   ino_t inode_id;
 
-  struct inode &inode;
+  inode &m_inode;
   // For cacheing
   util::list<dirent &> siblings;
   dirent &parent;
@@ -58,7 +61,7 @@ struct dirent {
 // https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/stat.h.html
 class inode {
 public:
-  inode(struct dirent &dirent, mode_t mode) : mode(mode), dirent(dirent) {}
+  inode(dirent &m_dirent, mode_t mode) : mode(mode), m_dirent(m_dirent) {}
   dev_t device;       // Device ID of device containing file.
   ino_t id;           // File serial number.
   mode_t mode;        // Mode of file (see below).
@@ -73,10 +76,10 @@ public:
 
   virtual ssize_t read(void *buf, size_t nbyte, off_t offset);
   virtual ssize_t write(const void *buf, size_t n, off_t offset);
-  virtual const struct list_head opendir();
+  virtual const util::list_iterator<dirent> opendir();
 
 private:
-  struct dirent &dirent;
+  dirent &m_dirent;
   int num_links; // Number of open instances of this file
   off_t buf_size;
   void *buf;

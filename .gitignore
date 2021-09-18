@@ -5,3 +5,4 @@ html/
 man/
 tests/test/list_gen.h
 null.d
+compile_commands.json

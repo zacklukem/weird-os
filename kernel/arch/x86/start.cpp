@@ -8,7 +8,6 @@
 #include <kernel/printk.h>
 #include <kernel/serial.h>
 #include <kernel/timer.h>
-#include <kernel/vector.h>
 #include <stdio.h>
 
 #ifdef TEST_RUN_MODE

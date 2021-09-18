@@ -18,8 +18,8 @@ static void __run_test_case__(void (*test)(struct __test_result__ *),
   test(&result);
   if (result.fail) {
     num_failed++;
-    printf("\nFAILED AT: %s:%d:\n    %s\n", result.file, result.line,
-           result.message);
+    printf("\nFAILED AT: %s:%d:\n    %s\n    %s\n", result.file, result.line,
+           result.cond, result.message);
   } else {
     num_pass++;
     printf("OK\n");

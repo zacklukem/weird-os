@@ -33,26 +33,26 @@ kernel: DEFS=
 kernel: $(BUILD_DIR)/kernel.elf
 
 $(BUILD_DIR)/kernel.elf: $(KERNEL_OBJS)
-	printf "[$@] Linking...\r"
+	printf "%-40s \033[0;33mLinking...\033[0m\r" "$@"
 	$(LD) $(LDFLAGS) $(KERNEL_OBJS) -o $@
-	printf "[$@] Done.     \n"
+	printf "%-40s \033[0;32mLinked.            \033[0m\n" "$@"
 
 $(BUILD_DIR)/%.cpp.o: %.cpp
-	printf "[$@] Compiling...\r"
+	printf "%-40s \033[0;33mCompiling...\033[0m\r" "$@"
 	mkdir -p $(dir $@)
 	$(CC) $(DEFS) $(CFLAGS) -c $< -o $@
-	printf "[$@] Done.       \n"
+	printf "%-40s \033[0;32mCompiled.            \033[0m\n" "$@"
 
 $(BUILD_DIR)/%.asm.o: %.asm
-	printf "[$@] Assembling...\r"
+	printf "%-40s \033[0;33mAssembling...\033[0m\r" "$@"
 	mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) $< -o $@
-	printf "[$@] Done.        \n"
+	printf "%-40s \033[0;32mAssembled.            \033[0m\n" "$@"
 
 $(BUILD_DIR)/test_kernel.elf: tests/test/list_gen.h $(KERNEL_OBJS) $(TEST_OBJS)
-	printf "[$@] Linking...\r"
+	printf "%-40s \033[0;33mLinking...\033[0m\r" "$@"
 	$(LD) $(LDFLAGS) $(KERNEL_OBJS) $(TEST_OBJS) -o $@
-	printf "[$@] Done.     \n"
+	printf "%-40s \033[0;32mLinked.            \033[0m\n" "$@"
 
 .PHONY: test
 test: DEFS=-DTEST_RUN_MODE
@@ -74,9 +74,9 @@ clean:
 
 .PHONY: test_setup
 test_setup:
-	printf "[$@] Generating...\r"
+	printf "%-40s \033[0;33mGenerating...\033[0m\r" "$@"
 	./tests/test/setup.sh
-	printf "[$@] Done.        \n"
+	printf "%-40s \033[0;32mGenerated.            \033[0m\n" "$@"
 
 -include $(KERNEL_C_DEPS)
 -include $(TEST_DEPS)

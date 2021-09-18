@@ -42,6 +42,22 @@ int putchar(int c) { return putc(c, stdout); }
 
 int puts(const char *str) { return fputs(str, stdout); }
 
+static int blank_flush() { return 0; }
+
+int vsprintf(char *c, const char *fmt, va_list list) {
+  FILE file;
+  file._flush_func = blank_flush;
+  file._IO_write_base = c;
+  file._IO_write_ptr = c;
+  return vfprintf(&file, fmt, list);
+}
+
+int sprintf(char *c, const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  return vsprintf(c, fmt, args);
+}
+
 int vfprintf(FILE *f, const char *format, va_list args) {
 
   for (int i = 0; format[i] != 0; ++i) {

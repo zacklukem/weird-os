@@ -2,15 +2,15 @@
 #define KERNEL_FS_FLAGS_H
 
 // File mode masks
-#define S_IRUSR 0400 // Read permission, owner.
-#define S_IWUSR 0200 // Write permission, owner.
-#define S_IXUSR 0100 // Execute/search permission, owner.
+#define S_IRUSR 0400 ///< Read permission, owner.
+#define S_IWUSR 0200 ///< Write permission, owner.
+#define S_IXUSR 0100 ///< Execute/search permission, owner.
 #define S_IRWXU                                                                \
-  S_IRUSR | S_IWUSR | S_IXUSR // Read, write, execute/search by owner.
+  S_IRUSR | S_IWUSR | S_IXUSR ///< Read, write, execute/search by owner.
 
-#define S_IRGRP 040 // Read permission, group.
-#define S_IWGRP 020 // Write permission, group.
-#define S_IXGRP 010 // Execute/search permission, group.
+#define S_IRGRP 040 ///< Read permission, group.
+#define S_IWGRP 020 ///< Write permission, group.
+#define S_IXGRP 010 ///< Execute/search permission, group.
 #define S_IRWXG                                                                \
   S_IRGRP | S_IWGRP | S_IXGRP // Read, write, execute/search by group.
 

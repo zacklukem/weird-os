@@ -1,16 +1,24 @@
-#ifndef INCLUDES_KERNEL_LIST_H
-#define INCLUDES_KERNEL_LIST_H
+#ifndef INCLUDES_UTIL_LIST_H
+#define INCLUDES_UTIL_LIST_H
 
 #include <assert.h>
+#include <stdint.h>
 #include <util/macros.h>
 
 namespace util {
 
 template <class T> struct list_node {
-  list_node(){};
+  list_node() : prev(nullptr), next(nullptr){};
   list_node *prev;
   list_node *next;
   T value;
+};
+
+template <class T> struct list_iterator {
+  list_node<T> *p;
+  list_node<T> &operator*() { return *p; }
+  bool operator!=(const list_iterator<T> &rhs) { return p != rhs.p; }
+  void operator++() { p = p->next; }
 };
 
 /**
@@ -20,27 +28,53 @@ template <class T> struct list_node {
  */
 template <class T> class list {
 public:
-  T &push_front(const T &value) {
-    auto node = new list_node<T>();
-    node->value = value;
-    node->prev = nullptr;
-    node->next = first;
-    first = next;
+  list() : first(nullptr){};
+
+  /**
+   * @brief Get an element by its index
+   */
+  T &at(size_t idx) const {
+    auto node = first;
+    for (size_t i = 0; i < idx; ++i) {
+      node = node->next;
+    }
     return node->value;
   };
 
-  T &push_back(const T &value) {
-    list_node *last;
-    for (last = first; last && last->next; last = node->next)
-      ;
+  /**
+   * @brief Push an element to the front of the linked list
+   */
+  T &push_front(const T &value) {
     auto node = new list_node<T>();
     node->value = value;
+    if (!first)
+      return (first = node)->value;
+    node->prev = nullptr;
+    node->next = first;
+    first = node;
+    return node->value;
+  };
+
+  /**
+   * @brief Push an element to the end of the linked list
+   */
+  T &push_back(const T &value) {
+    auto node = new list_node<T>();
+    node->value = value;
+    if (!first)
+      return (first = node)->value;
+    list_node<T> *last = first;
+    while (last->next)
+      last = last->next;
     node->prev = last;
     node->next = nullptr;
     last->next = node;
     return node->value;
   };
 
+  /**
+   * @brief Pop an element from the front of the list
+   */
   T pop_front() {
     auto old = first;
     first = first->next;
@@ -51,20 +85,33 @@ public:
     return out;
   };
 
+  /**
+   * @brief Pop an element from the back of the list
+   */
   T pop_back() {
-    list_node *last;
-    for (last = first; last && last->next; last = node->next)
-      ;
-    auto out = *last->value;
+    list_node<T> *last = first;
+    while (last->next)
+      last = last->next;
+    auto out = last->value;
     last->prev->next = nullptr;
     delete last;
     return out;
   };
 
+  // auto return requires C++14
+  list_iterator<T> begin() const { return list_iterator<T>{first}; }
+
+  list_iterator<T> end() const {
+    list_node<T> *last = first;
+    while (last->next)
+      last = last->next;
+    return list_iterator<T>{last};
+  }
+
 private:
-  list_node *first;
+  list_node<T> *first;
 };
 
 } // namespace util
 
-#endif // INCLUDES_KERNEL_LIST_H
+#endif // INCLUDES_UTIL_LIST_H

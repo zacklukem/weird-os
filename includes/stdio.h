@@ -1,5 +1,5 @@
-#ifndef INCLUDES_STDIO
-#define INCLUDES_STDIO
+#ifndef INCLUDES_STDIO_H
+#define INCLUDES_STDIO_H
 
 #include <stdarg.h>
 
@@ -75,7 +75,7 @@ int puts(const char *);
 // void setbuf(FILE *, char *);
 // int setvbuf(FILE *, char *, int, size_t);
 // int snprintf(char *, size_t, const char *, ...);
-// int sprintf(char *, const char *, ...);
+int sprintf(char *, const char *, ...);
 // int sscanf(const char *, const char *, int...);
 // char *tempnam(const char *, const char *);
 // FILE *tmpfile(void);
@@ -84,6 +84,6 @@ int puts(const char *);
 int vfprintf(FILE *, const char *, va_list);
 int vprintf(const char *, va_list);
 // int vsnprintf(char *, size_t, const char *, va_list);
-// int vsprintf(char *, const char *, va_list);
+int vsprintf(char *, const char *, va_list);
 
-#endif // INCLUDES_STDIO
+#endif // INCLUDES_STDIO_H
