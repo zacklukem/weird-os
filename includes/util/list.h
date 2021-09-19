@@ -16,7 +16,7 @@ template <class T> struct list_node {
 
 template <class T> struct list_iterator {
   list_node<T> *p;
-  list_node<T> &operator*() { return *p; }
+  T &operator*() { return p->value; }
   bool operator!=(const list_iterator<T> &rhs) { return p != rhs.p; }
   void operator++() { p = p->next; }
 };
@@ -34,6 +34,7 @@ public:
     for (auto node = first; node;) {
       auto next = node = node->next;
       delete node;
+      delete next;
       node = next;
     }
   };

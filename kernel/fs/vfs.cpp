@@ -28,6 +28,7 @@ optional<rc<inode>> vfs::resolve_path(const char *path) {
     current += ent;
     auto mount = mounts.get(current);
     if (mount.has_value()) {
+
       // gota find a way to give device dirents their proper parentage
     }
   }

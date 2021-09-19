@@ -175,7 +175,8 @@ void free(void *mem) {
   struct block_header *header =
       (struct block_header *)((size_t)mem - sizeof(struct block_header));
   assert(is_valid(header->magic) && "Heap block is invalid!");
-  assert(is_used(header->magic) && "Double free error");
+  if (!is_used(header->magic))
+    return;
   header->magic &= 0xfffffffe;
 
   // Merge forwards

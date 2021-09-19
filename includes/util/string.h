@@ -3,8 +3,8 @@
 
 #include <kernel/kmalloc.h>
 #include <string.h>
+#include <util/list.h>
 #include <util/rc.h>
-#include <util/vector.h>
 
 namespace util {
 namespace __internal__ {
@@ -18,55 +18,44 @@ constexpr size_t __strlen_cexpr__(const char *str) {
 
 class string {
 public:
+  string() {
+    length = 0;
+    data = (char *)kmalloc(5);
+  }
+
   string &operator=(string &other) {
-    // TODO: decrement other counter?
-    counter = other.counter;
-    counter->count++;
     length = other.length;
-    data = other.data;
+    data = (char *)kmalloc(length + 1);
+    memcpy(data, other.data, length);
+    data[length] = 0;
     return *this;
   }
 
   string &operator=(const string &other) {
-    counter = other.counter;
-    counter->count++;
     length = other.length;
-    data = other.data;
+    data = (char *)kmalloc(length + 1);
+    memcpy(data, other.data, length);
+    data[length] = 0;
     return *this;
   }
 
-  string(string &other)
-      : counter(other.counter), data(other.data), length(other.length) {
-    counter->count++;
-  }
+  string(string &other) : data(other.data), length(other.length) {}
 
-  string(const string &other)
-      : counter(other.counter), data(other.data), length(other.length) {
-    counter->count++;
-  }
+  string(const string &other) : data(other.data), length(other.length) {}
 
   string(const char *cstr)
-      : counter(new __internal__::rc_counter()),
-        data((char *)kmalloc(__internal__::__strlen_cexpr__(cstr) + 1)),
+      : data((char *)kmalloc(__internal__::__strlen_cexpr__(cstr) + 1)),
         length(__internal__::__strlen_cexpr__(cstr)) {
     memcpy(data, cstr, length);
     data[length] = 0;
   }
 
-  string(size_t len)
-      : counter(new __internal__::rc_counter()), data((char *)kmalloc(len + 1)),
-        length(len) {
+  string(size_t len) : data((char *)kmalloc(len + 1)), length(len) {
     data[0] = 0;
     data[len] = 0;
   }
 
-  ~string() {
-    counter->count--;
-    if (counter->count == 0) {
-      free((void *)data);
-      delete counter;
-    }
-  }
+  ~string() { free((void *)data); }
 
   inline const char *cstr() const { return data; }
 
@@ -120,8 +109,7 @@ public:
     return out;
   };
 
-  // TODO: leaks memory like crazy
-  vec<string> split(char sep) const {
+  list<string> split(char sep) const {
     int count = 1;
 
     for (size_t i = 0; i < length; i++) {
@@ -130,13 +118,14 @@ public:
       }
     }
 
-    vec<string> out(count);
+    list<string> out;
 
     size_t sec_size = 0;
     size_t sec_start = 0;
     for (size_t i = 0; i < length; i++) {
       if (data[i] == sep) {
-        out.push_back(this->substr(sec_start, sec_size));
+        auto s = this->substr(sec_start, sec_size);
+        out.push_back(s);
         sec_size = 0;
         sec_start = i + 1;
       } else {
@@ -180,7 +169,6 @@ public:
   inline bool operator!=(const char *other) const { return !(*this == other); }
 
 private:
-  __internal__::rc_counter *counter;
   char *data = nullptr;
   size_t length;
 };
