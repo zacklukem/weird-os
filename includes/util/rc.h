@@ -28,14 +28,28 @@ public:
   };
 
   rc(rc<T> &other) {
-    ptr = other.ptr;
+    ptr = (T *)other.ptr;
     counter = other.counter;
     counter->count++;
   };
 
-  rc<T> &operator=(const rc<T> &r) {
+  template <class Y> rc(rc<Y> &other) {
+    ptr = (T *)other.ptr;
+    counter = other.counter;
+    counter->count++;
+  };
+
+  rc &operator=(const rc &r) {
     counter->count--;
-    ptr = r.ptr;
+    ptr = (T *)r.ptr;
+    counter = r.counter;
+    counter->count++;
+    return *this;
+  };
+
+  template <class Y> rc<T> &operator=(const rc<Y> &r) {
+    counter->count--;
+    ptr = (T *)r.ptr;
     counter = r.counter;
     counter->count++;
     return *this;
@@ -68,6 +82,7 @@ public:
 private:
   __internal__::rc_counter *counter;
   T *ptr;
+  template <class Y> friend class rc;
   template <class Y> friend class weak;
 };
 
@@ -77,6 +92,22 @@ public:
 
   weak(__internal__::rc_counter *counter, T *ptr) : counter(counter), ptr(ptr) {
     counter->weak_count++;
+  };
+
+  weak<T> &operator=(const rc<T> &r) {
+    counter->weak_count--;
+    ptr = r.ptr;
+    counter = r.counter;
+    counter->weak_count++;
+    return *this;
+  };
+
+  weak<T> &operator=(const weak<T> &r) {
+    counter->weak_count--;
+    ptr = r.ptr;
+    counter = r.counter;
+    counter->weak_count++;
+    return *this;
   };
 
   template <class Y> weak<T> &operator=(const rc<Y> &r) {
@@ -102,6 +133,12 @@ public:
   };
 
   template <class Y> weak(weak<Y> &other) {
+    ptr = other.ptr;
+    counter = other.counter;
+    counter->weak_count++;
+  };
+
+  weak(weak<T> &other) {
     ptr = other.ptr;
     counter = other.counter;
     counter->weak_count++;

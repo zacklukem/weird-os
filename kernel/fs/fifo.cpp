@@ -1,8 +1,8 @@
 #include <kernel/fs/fifo.h>
 using namespace fs;
 
-fifo::fifo(ino_t id, mode_t mode, rc<dirent> m_dirent)
-    : inode(id, m_dirent, mode) {
+fifo::fifo(rc<dirent> m_dirent, ino_t id, mode_t mode)
+    : inode(m_dirent, id, mode) {
   mode |= S_IFIFO;
 }
 

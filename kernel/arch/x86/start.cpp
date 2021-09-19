@@ -47,6 +47,7 @@ extern "C" void __kernel_main__() {
 
 #ifdef TEST_RUN_MODE
   __run_kernel_tests__();
+  heap_info();
 #endif
 
   while (1)

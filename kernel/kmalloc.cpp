@@ -103,7 +103,7 @@ static struct block_header *get_suitable_block(size_t size, int page_align,
     best = best->next;
   }
 
-  while (current->next) {
+  while (current) {
     // Get smallest unused block with size at least equal to given size
     if (!is_used(current->magic)) {
       uint32_t required_size = size;
@@ -129,6 +129,9 @@ static struct block_header *get_suitable_block(size_t size, int page_align,
            "Out of heap space for aligned malloc");
     return make_aligned_block(size, best);
   } else {
+    if (best->size < size) {
+      heap_info();
+    }
     assert(best->size >= size && "Out of heap space");
     return best;
   }
@@ -172,6 +175,7 @@ void free(void *mem) {
   struct block_header *header =
       (struct block_header *)((size_t)mem - sizeof(struct block_header));
   assert(is_valid(header->magic) && "Heap block is invalid!");
+  assert(is_used(header->magic) && "Double free error");
   header->magic &= 0xfffffffe;
 
   // Merge forwards
@@ -297,13 +301,21 @@ void operator delete(void *ptr, size_t sz) noexcept {
     free(ptr);
 }
 
-extern "C" void __cxa_pure_virtual() { assert(false && "virtual death"); }
+extern "C" {
+void __cxa_pure_virtual() { assert(false && "virtual death"); }
+
+void *__dso_handle;
+
+int __cxa_atexit(void (*destructor)(void *), void *arg, void *dso) {
+  return 0;
+};
+}
 
 #ifdef TEST_RUN_MODE
 void reset_kmalloc() {
-  kheap->first_block->magic = MAGIC & 0xfffffffe; // Set last bit to 0
-  kheap->first_block->size = kheap->size - sizeof(struct block_header);
-  kheap->first_block->next = 0;
-  kheap->first_block->previous = 0;
+  //  kheap->first_block->magic = MAGIC & 0xfffffffe; // Set last bit to 0
+  //  kheap->first_block->size = kheap->size - sizeof(struct block_header);
+  //  kheap->first_block->next = 0;
+  //  kheap->first_block->previous = 0;
 }
 #endif

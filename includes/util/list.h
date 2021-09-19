@@ -29,6 +29,14 @@ template <class T> struct list_iterator {
 template <class T> class list {
 public:
   list() : first(nullptr){};
+  // fb78
+  ~list() {
+    for (auto node = first; node;) {
+      auto next = node = node->next;
+      delete node;
+      node = next;
+    }
+  };
 
   /**
    * @brief Get an element by its index

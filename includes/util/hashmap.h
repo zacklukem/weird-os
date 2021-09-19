@@ -10,7 +10,7 @@
 #include <util/optional.h>
 #include <util/string.h>
 
-#define HASH_RANGE 0xff
+#define HASH_RANGE 0x100
 
 namespace util {
 
@@ -41,6 +41,18 @@ static inline uint8_t hash(size_t i) {
 template <class K, class V> class hashmap {
 public:
   hashmap() { memset(table, 0, HASH_RANGE * sizeof(void *)); };
+
+  ~hashmap() {
+    for (int i = 0; i < HASH_RANGE; i++) {
+      if (table[i]) {
+        for (auto node = table[i]; node;) {
+          auto next = node->next;
+          delete node;
+          node = next;
+        }
+      }
+    }
+  }
 
   util::optional<V> get(const K &key) {
     int hashed = hash(key);

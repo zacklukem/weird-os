@@ -9,11 +9,11 @@ TEST_CASE(list_push_pop_back) {
   l.push_back(3);
   l.push_back(4);
   l.push_back(5);
-  //  ASSERT(l.pop_back() == 5);
-  //  ASSERT(l.pop_back() == 4);
-  //  ASSERT(l.pop_back() == 3);
-  //  ASSERT(l.pop_back() == 2);
-  //  ASSERT(l.pop_back() == 1);
+  ASSERT(l.pop_back() == 5);
+  ASSERT(l.pop_back() == 4);
+  ASSERT(l.pop_back() == 3);
+  ASSERT(l.pop_back() == 2);
+  ASSERT(l.pop_back() == 1);
 }
 
 TEST_CASE(list_push_pop_front) {

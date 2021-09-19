@@ -75,7 +75,7 @@ struct file {
  */
 class inode {
 public:
-  inode(ino_t id, rc<dirent> m_dirent, mode_t mode)
+  inode(rc<dirent> m_dirent, ino_t id, mode_t mode)
       : id(id), mode(mode), m_dirent(m_dirent) {}
 
   dev_t device;       ///< Device ID of device containing file.
@@ -123,8 +123,8 @@ struct dirent {
 
 class directory_like : public inode {
 public:
-  directory_like(ino_t id, mode_t mode, rc<dirent> m_dirent)
-      : inode(id, m_dirent, mode | S_IFDIR){};
+  directory_like(rc<dirent> m_dirent, ino_t id, mode_t mode)
+      : inode(m_dirent, id, mode | S_IFDIR){};
 
   void add_child(rc<dirent> dirent) { dirent->children.push_front(dirent); };
 
@@ -132,6 +132,16 @@ public:
     return m_dirent->children.begin();
   };
 };
+
+template <class T, class... InoArgs>
+rc<T> make_inode_dirent_pair(const char *ident,
+                             util::optional<rc<dirent>> parent,
+                             InoArgs... ino_args) {
+  auto dir = util::make_rc<dirent>(ident, weak<inode>(), parent);
+  auto ino = util::make_rc<T>(dir, ino_args...);
+  dir->m_inode = ino;
+  return ino;
+}
 
 } // namespace fs
 

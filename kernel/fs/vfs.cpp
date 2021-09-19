@@ -17,22 +17,20 @@ void vfs::mount_device(string path, rc<fs_device> device) {
 optional<rc<inode>> vfs::resolve_path(const char *path) {
   assert(path[0] == '/' && "Path names must be relative to root dir");
 
-  // Get the mount dir of the given path
-  char buf[0xff]; // the current path relative to the current mount
-  size_t buf_i = 0;
-  rc<fs_device> current = root_device;
-  for (size_t i = 1; path[i]; i++) {
-    if (path[i] == '/' || !path[i + 1]) {
-      auto bs = string(buf);
-      auto mount = mounts.get(bs);
-      if (mount.has_value()) {
-        current = mount.value().device;
-        buf_i = 0;
-      }
+  string p(path);
+
+  auto s_path = p.split('/');
+
+  string current = "";
+
+  for (auto &ent : s_path) {
+    current += "/";
+    current += ent;
+    auto mount = mounts.get(current);
+    if (mount.has_value()) {
+      // gota find a way to give device dirents their proper parentage
     }
-    buf[buf_i++] = path[i];
-    buf[buf_i] = 0;
   }
 
-  return current->resolve_path(buf);
+  return root_device->resolve_path("");
 }
