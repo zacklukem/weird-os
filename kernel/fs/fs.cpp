@@ -7,10 +7,14 @@ using namespace fs;
 rc<vfs> virt_fs;
 rc<udev> virt_udev;
 
-int init_fs() {
+int fs::init_fs() {
   virt_fs = util::make_rc<vfs>();
   virt_udev = util::make_rc<udev>(0);
 
-  virt_fs->mount_device("/dev", virt_udev);
+  virt_fs->mount_device("/", virt_udev);
   return 0;
+}
+
+optional<rc<dirent>> fs::resolve_path(const char *path) {
+  return virt_fs->resolve_path(path);
 }

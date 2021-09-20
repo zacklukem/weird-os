@@ -6,32 +6,42 @@ using namespace fs;
 
 vfs::vfs() {}
 
-void vfs::mount_device(string path, rc<fs_device> device) {
-  if (!fs_devices.get(device->id).has_value()) {
-    fs_devices.set(device->id, device);
+void vfs::mount_device(const char *path, rc<fs_device> device) {
+  auto mount_dirent = device->mount(path); // TODO: only get basename of his
+
+  if (path[0] == '/' && strlen(path) == 1) {
+    root_dirent = mount_dirent;
+    mount_dirent->parent = util::nullopt;
+  } else {
+    assert(false && "no good");
   }
-  mount_entry entry{device};
-  mounts.set(path, entry);
+
+  // Place this dirent in the proper place
+  // set parent dirent of mount_dirent
 };
 
-optional<rc<inode>> vfs::resolve_path(const char *path) {
+optional<rc<dirent>> vfs::resolve_path(const char *path) {
   assert(path[0] == '/' && "Path names must be relative to root dir");
 
-  string p(path);
+  char buf[0xff];
+  size_t i = 0;
 
-  auto s_path = p.split('/');
+  rc<dirent> current = root_dirent;
 
-  string current = "";
-
-  for (auto &ent : s_path) {
-    current += "/";
-    current += ent;
-    auto mount = mounts.get(current);
-    if (mount.has_value()) {
-
-      // gota find a way to give device dirents their proper parentage
+  for (size_t j = 1; path[j]; ++j) {
+    if (path[j] == '/') {
+      buf[i] = 0; // NULL terminate c string
+      auto next = current->get_child(buf);
+      if (next.has_value())
+        current = next.value();
+      else
+        return util::nullopt;
+      i = 0;
+    } else {
+      buf[i++] = path[j];
     }
   }
 
-  return root_device->resolve_path("");
+  buf[i] = 0; // NULL terminate c string
+  return current->get_child(buf);
 }

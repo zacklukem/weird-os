@@ -8,6 +8,16 @@ TEST_CASE(string_strlen) {
   ASSERT_EQ(strlen(str), 8);
 }
 
+TEST_CASE(string_strcmp) {
+  const char *a = "asdf";
+  const char *b = "fdsa";
+  const char *c = "asdfg";
+  const char *d = "asdf";
+  ASSERT(strcmp(a, d));
+  ASSERT(!strcmp(a, b));
+  ASSERT(!strcmp(a, c));
+}
+
 TEST_CASE(string_eq) {
   string a = "asdf";
   string b = "fdsa";

@@ -10,9 +10,11 @@ class udev : public fs_device {
 public:
   udev(dev_t id);
   virtual ~udev() override;
+
+  rc<inode> create_tty(int num);
+
   virtual optional<rc<inode>> get_inode(ino_t inode) override;
-  virtual optional<rc<inode>> resolve_path(const char *path) override;
-  virtual util::list_iterator<rc<dirent>> opendir(rc<inode> inode) override;
+  virtual rc<dirent> mount(const char *name) override;
 
 private:
   rc<dirent> root_dirent;

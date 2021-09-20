@@ -29,8 +29,7 @@ static void __run_test_case__(void (*test)(struct __test_result__ *),
 
 extern "C" void __run_kernel_tests__() {
   cleark();
-  RUN_TEST_CASE(string_split);
-  //#include "list_gen.h"
+#include "list_gen.h"
   if (num_failed) {
     printf("%d tests FAILED of %d\n", num_failed, num_total);
   } else {

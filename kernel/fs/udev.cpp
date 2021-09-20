@@ -6,18 +6,22 @@ using namespace fs;
 
 udev::udev(dev_t id) : fs_device(id) {
 
-  root_inode = make_inode_dirent_pair<directory_like>(
-      "", util::nullopt, get_inode_id(), S_IRWXO | S_IRWXG | S_IRWXU);
+  root_dirent = util::make_rc<dirent>("", weak<inode>(), util::nullopt);
 
+  root_inode = util::make_rc<directory_like>(root_dirent, get_inode_id(),
+                                             S_IRWXO | S_IRWXG | S_IRWXU);
+
+  root_dirent->m_inode = root_inode;
+  root_dirent->inode_id = root_inode->id;
+
+  // Set block device
   root_inode->device = id;
   root_inode->rdevice = id;
-  root_dirent = root_inode->m_dirent;
+  // tty0 entry
+  auto tty0 = create_tty(0);
+  root_dirent->add_child(tty0->m_dirent);
 
-  auto tty0 = make_inode_dirent_pair<fifo>("tty0", root_dirent, get_inode_id(),
-                                           S_IRWXO | S_IRWXG | S_IRWXU);
-  inode_cache.set(tty0->id, tty0);
-
-  root_inode->add_child(tty0->m_dirent);
+  inode_cache.set(root_inode->id, root_inode);
 }
 
 udev::~udev() {}
@@ -26,10 +30,22 @@ optional<rc<inode>> udev::get_inode(ino_t inode) {
   return inode_cache.get(inode);
 }
 
-optional<rc<inode>> udev::resolve_path(const char *path) {
-  return util::nullopt;
+rc<dirent> udev::mount(const char *name) {
+  root_dirent->ident = name;
+  return root_dirent;
 }
 
-util::list_iterator<rc<dirent>> udev::opendir(rc<inode> inode) {
-  return inode->opendir();
+rc<inode> udev::create_tty(int num) {
+  // TODO: strings mean this will clean later...
+  char *name = (char *)kmalloc(10);
+  memcpy(name, "tty", 3);
+  itoa(num, &name[3], 10);
+  auto tty_dirent = util::make_rc<dirent>(name, weak<inode>(), root_dirent);
+
+  auto tty_inode = util::make_rc<fifo>(tty_dirent, get_inode_id(),
+                                       S_IRWXO | S_IRWXG | S_IRWXU);
+
+  inode_cache.set(tty_inode->id, tty_inode);
+
+  return tty_inode;
 }

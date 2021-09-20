@@ -34,7 +34,6 @@ public:
     for (auto node = first; node;) {
       auto next = node = node->next;
       delete node;
-      delete next;
       node = next;
     }
   };
@@ -107,10 +106,13 @@ public:
     return out;
   };
 
-  // auto return requires C++14
+  // FIXME: when the array is empty, begin() == end() because both are nullptr
   list_iterator<T> begin() const { return list_iterator<T>{first}; }
 
   list_iterator<T> end() const {
+    return list_iterator<T>{nullptr};
+    if (first == nullptr)
+      return list_iterator<T>{nullptr};
     list_node<T> *last = first;
     while (last->next)
       last = last->next;
@@ -119,7 +121,7 @@ public:
 
 private:
   list_node<T> *first;
-};
+}; // namespace util
 
 } // namespace util
 

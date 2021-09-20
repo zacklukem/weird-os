@@ -2,6 +2,7 @@
 #include <arch/x86/idt.h>
 #include <arch/x86/irq.h>
 #include <assert.h>
+#include <kernel/fs/fs.h>
 #include <kernel/kb.h>
 #include <kernel/kmalloc.h>
 #include <kernel/page.h>
@@ -41,13 +42,15 @@ extern "C" void __kernel_main__() {
 
   install_timer();
 
-  // Enable interupts to start using the keyboard
-
   __asm__("sti");
+
+  fs::init_fs();
+
+  // Enable interupts to start using the keyboard
 
 #ifdef TEST_RUN_MODE
   __run_kernel_tests__();
-  heap_info();
+  // heap_info();
 #endif
 
   while (1)

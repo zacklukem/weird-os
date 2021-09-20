@@ -25,18 +25,14 @@ public:
    * @param path the path to resolve
    * @return struct inode* a pointer to a cached inode
    */
-  optional<rc<inode>> resolve_path(const char *path);
+  optional<rc<dirent>> resolve_path(const char *path);
 
-  void mount_device(string path, rc<fs_device> device);
-
-  struct mount_entry {
-    rc<fs_device> device;
-  };
+  void mount_device(const char *path, rc<fs_device> device);
 
 private:
   rc<fs_device> root_device;
+  rc<dirent> root_dirent;
   util::hashmap<dev_t, rc<fs_device>> fs_devices;
-  util::hashmap<string, mount_entry> mounts;
 };
 
 } // namespace fs

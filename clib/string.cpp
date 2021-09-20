@@ -9,7 +9,14 @@ int itoa(int value, char *out, int base) {
   char *tmp = buffer;
   unsigned int v = value;
   int i;
-  int len;
+  int len = 0;
+
+  // FIXME: make this code make sense
+  if (value == 0) {
+    out[0] = '0';
+    out[1] = 0;
+    return 1;
+  }
 
   int sign = base == 10 && value < 0;
   if (sign) {
@@ -33,6 +40,8 @@ int itoa(int value, char *out, int base) {
   while (tmp > buffer)
     *out++ = *--tmp;
 
+  *out++ = 0;
+
   return len;
 }
 
@@ -51,11 +60,16 @@ void *memset(void *str, int c, size_t n) {
 
 // TODO: implement this properly
 int strcmp(const char *str1, const char *str2) {
-  while (*str1 != 0 && *str2 != 0) {
-    if (*str1++ != *str2++)
-      return -1;
+  if (str1 == str2)
+    return true;
+  auto len1 = strlen(str1);
+  if (len1 != strlen(str2))
+    return false;
+  for (size_t i = 0; i < len1; i++) {
+    if (str1[i] != str2[i])
+      return false;
   }
-  return 0;
+  return true;
 }
 
 // https://opensource.apple.com/source/tcl/tcl-5/tcl/compat/memcmp.c

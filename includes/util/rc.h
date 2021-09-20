@@ -27,7 +27,7 @@ public:
     counter->count++;
   };
 
-  rc(rc<T> &other) {
+  rc(const rc<T> &other) {
     ptr = (T *)other.ptr;
     counter = other.counter;
     counter->count++;
@@ -93,6 +93,8 @@ public:
   weak(__internal__::rc_counter *counter, T *ptr) : counter(counter), ptr(ptr) {
     counter->weak_count++;
   };
+
+  inline bool operator!() { return ptr == nullptr; }
 
   weak<T> &operator=(const rc<T> &r) {
     counter->weak_count--;

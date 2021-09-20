@@ -26,6 +26,7 @@
 #include <util/optional.h>
 #include <util/rc.h>
 
+using util::optional;
 using util::rc;
 using util::weak;
 
@@ -35,7 +36,7 @@ namespace fs {
 
 // Forward declarations
 class inode;
-struct dirent;
+class dirent;
 struct file;
 struct fdtable;
 
@@ -107,18 +108,37 @@ public:
  * The dirent maintains a cache of directory entries, their string identifiers
  * and their inode identifiers.
  */
-struct dirent {
+class dirent {
+public:
   dirent(const char *ident, weak<inode> m_inode,
          util::optional<rc<dirent>> parent)
       : ident(ident), inode_id(m_inode.lock()->id), m_inode(m_inode),
         parent(parent), children(){};
+  virtual ~dirent(){};
+
   const char *ident; ///< The string identifier of this direntry
   ino_t inode_id;    ///< The raw inode id of this entry
 
   weak<inode> m_inode; ///< A reference to the raw inode
-  // For cacheing
+
+  const util::list_iterator<rc<dirent>> opendir() { return children.begin(); }
+
+  virtual optional<rc<dirent>> get_child(const char *name) {
+    for (auto &dirent : children) {
+      if (strcmp(name, dirent->ident)) {
+        return dirent;
+      }
+    }
+    return util::nullopt;
+  }
+
+  virtual void add_child(rc<dirent> &dirent) { children.push_back(dirent); }
+  virtual optional<rc<dirent>> get_parent() { return parent; }
+
   util::optional<rc<dirent>> parent; ///< A reference to this dirent's parent
-  util::list<rc<dirent>> children;   ///< the dirent's children
+protected:
+  // For cacheing
+  util::list<rc<dirent>> children; ///< the dirent's children
 };
 
 class directory_like : public inode {
@@ -126,22 +146,12 @@ public:
   directory_like(rc<dirent> m_dirent, ino_t id, mode_t mode)
       : inode(m_dirent, id, mode | S_IFDIR){};
 
-  void add_child(rc<dirent> dirent) { dirent->children.push_front(dirent); };
-
   virtual const util::list_iterator<rc<dirent>> opendir() override {
-    return m_dirent->children.begin();
+    return m_dirent->opendir();
   };
 };
 
-template <class T, class... InoArgs>
-rc<T> make_inode_dirent_pair(const char *ident,
-                             util::optional<rc<dirent>> parent,
-                             InoArgs... ino_args) {
-  auto dir = util::make_rc<dirent>(ident, weak<inode>(), parent);
-  auto ino = util::make_rc<T>(dir, ino_args...);
-  dir->m_inode = ino;
-  return ino;
-}
+optional<rc<dirent>> resolve_path(const char *path);
 
 } // namespace fs
 
