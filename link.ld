@@ -1,21 +1,22 @@
 ENTRY(start)
-phys = 0x00100000;
 SECTIONS {
-  .text phys : AT(phys) {
-    code = .;
+  . = 0x00100000;
+  .text ALIGN(0x1000) : {
+    code_addr = . ;
     *(.text)
     *(.rodata)
-    . = ALIGN(4096);
   }
-  .data : AT(phys + (data - code)) {
-    data = .;
+
+  .data ALIGN(0x1000) : {
+    data_addr = . ;
     *(.data)
-    . = ALIGN(4096);
   }
-  .bss : AT(phys + (bss - code)) {
-    bss = .;
+
+  .bss ALIGN(0x1000) : {
+    bss_addr = . ;
+    *(COMMON)
     *(.bss)
-    . = ALIGN(4096);
   }
-  end = .;
+  . = ALIGN(0x1000);
+  end_addr = . ;
 }

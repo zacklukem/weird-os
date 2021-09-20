@@ -9,8 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 
-extern uint32_t end;
-uint32_t _internal_placement_address = (uint32_t)&end;
+extern uint32_t end_addr; // End of kernel code (defined by linker script)
+uint32_t _internal_placement_address = (uint32_t)&end_addr;
 
 struct heap kheap_s;
 struct heap *kheap = 0;

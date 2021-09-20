@@ -3,30 +3,40 @@
 global start
 extern __kernel_main__
 
+; Linker script defined addresses
+extern code_addr
+extern bss_addr
+extern end_addr
+
 start:
+  ; set address of the stack
   mov esp, _sys_stack
   jmp stublet
 
 align 4
 mboot:
-  MULTIBOOT_PAGE_ALIGN  equ 1<<0
-  MULTIBOOT_MEMORY_INFO  equ 1<<1
-  MULTIBOOT_AOUT_KLUDGE  equ 1<<16
+  ; Flags constants
+  MULTIBOOT_PAGE_ALIGN  equ 0x1
+  MULTIBOOT_MEMORY_INFO  equ 0x2
+  MULTIBOOT_AOUT_KLUDGE  equ 0x10000
+
+  ; Magic ~~~~~~pow~~~~
   MULTIBOOT_HEADER_MAGIC  equ 0x1BADB002
   MULTIBOOT_HEADER_FLAGS  equ MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_AOUT_KLUDGE
+  ; More magical voodoo
   MULTIBOOT_CHECKSUM  equ -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
-  extern code, bss, end
 
-  ; This is the GRUB Multiboot header. A boot signature
+  ; Actually put the headers  here
   dd MULTIBOOT_HEADER_MAGIC
   dd MULTIBOOT_HEADER_FLAGS
   dd MULTIBOOT_CHECKSUM
+
   ; AOUT kludge - must be physical addresses. Make a note of these:
   ; The linker script fills in the data for these ones!
   dd mboot
-  dd code
-  dd bss
-  dd end
+  dd code_addr
+  dd bss_addr
+  dd end_addr
   dd start
 
 stublet:
@@ -54,4 +64,5 @@ flush2:
 
 section .bss
   resb 8192 ; reserved for the stack
-_sys_stack:
+_sys_stack: ; Stack grows downward, so stack overflows when it hits the start
+            ; of the bss section
