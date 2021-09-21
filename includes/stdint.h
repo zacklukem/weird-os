@@ -16,7 +16,7 @@ static_assert(sizeof(uint8_t) == 1, "uint8_t is not 1 byte");
 typedef unsigned short uint16_t;
 static_assert(sizeof(uint16_t) == 2, "uint16_t is not 2 bytes");
 
-typedef unsigned int uint32_t;
+typedef unsigned long uint32_t;
 static_assert(sizeof(uint32_t) == 4, "uint32_t is not 4 bytes");
 
 typedef unsigned long size_t;

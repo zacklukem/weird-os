@@ -28,7 +28,7 @@ static void __run_test_case__(void (*test)(struct __test_result__ *),
 #pragma GCC diagnostic pop
 
 extern "C" void __run_kernel_tests__() {
-  cleark();
+  // cleark();
 #include "list_gen.h"
   if (num_failed) {
     printf("%d tests FAILED of %d\n", num_failed, num_total);

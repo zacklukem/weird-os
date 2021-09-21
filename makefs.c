@@ -34,6 +34,9 @@ struct initrd_header {
 } __attribute__((packed));
 
 struct initrd_header *out;
+char *out_data;
+uint32_t out_data_cap = 0xff;
+uint32_t out_data_offset = 0;
 uint8_t id = 0;
 
 uint8_t convert_dirent(struct stat *stat, const char *name, uint8_t parent) {
@@ -52,8 +55,23 @@ uint8_t convert_dirent(struct stat *stat, const char *name, uint8_t parent) {
   else
     out->inodes[cur_id].size = stat->st_size;
   out->inodes[cur_id].data = 12341234; // TODO: offset
+  out->inodes[cur_id].uid = 0xabcdef1;
 
   return cur_id;
+}
+
+uint32_t load_data(int fd, size_t size) {
+  if (out_data_offset + size > out_data_cap) {
+    out_data_cap = out_data_offset + size + 0xff;
+    out_data = realloc(out_data, out_data_cap);
+  }
+  if (size == 0) {
+    return out_data_offset;
+  }
+  read(fd, &out_data[out_data_offset], size);
+  uint32_t out = out_data_offset;
+  out_data_offset += size;
+  return out;
 }
 
 uint8_t traverse_dir(const char *name, uint8_t parent) {
@@ -85,8 +103,10 @@ uint8_t traverse_dir(const char *name, uint8_t parent) {
 
     if (S_ISDIR(stat_buf.st_mode)) {
       my_dirent->first_child = traverse_dir(full_path, my_dirent_id);
+      out->inodes[my_dirent_id].data = 0;
     } else {
       my_dirent->first_child = 0;
+      out->inodes[my_dirent_id].data = load_data(current_fd, stat_buf.st_size);
     }
 
     // printf("%4d %-20s %-7o %-6lu %-3u %-3u\n", my_dirent_id, full_path,
@@ -120,6 +140,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  out_data = malloc(out_data_cap);
   out = malloc(sizeof(struct initrd_header));
   memset(out, 0, sizeof(struct initrd_header));
 
@@ -142,10 +163,12 @@ int main(int argc, char **argv) {
   out->inodes[dir_id].uid = 0;
   out->inodes[dir_id].gid = 0;
   out->inodes[dir_id].mode = 0777;
+  out->inodes[dir_id].data = 0;
 
   out->num_dirent = id;
   // LOAD TO FILE
   fwrite(out, sizeof(struct initrd_header), 1, output_file);
+  fwrite(out_data, out_data_offset, 1, output_file);
 
   free(out);
   close(current_fd);

@@ -16,7 +16,7 @@ struct initrd_dirent {
   uint8_t parent;      ///< index of parent or zero if is root node
   uint8_t first_child; ///< index of first child 0 if none
   uint8_t sibling;     ///< index of next sibling or 0 if none
-};
+} __attribute__((packed));
 
 struct initrd_inode {
   uint8_t id;
@@ -26,7 +26,7 @@ struct initrd_inode {
   uint32_t size;
   uint32_t
       data; ///< the offset in bytes from the start of the initrd to the data
-};
+} __attribute__((packed));
 
 struct initrd_header {
   uint8_t num_dirent;
@@ -46,6 +46,7 @@ private:
   rc<dirent> root_dirent;
   rc<directory_like> root_inode;
   initrd_header *header;
+  char *file_data;
   rc<dirent> cache(rc<dirent> parent, initrd_dirent &dirent);
   util::hashmap<ino_t, rc<inode>> inode_cache;
 };
