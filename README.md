@@ -9,23 +9,45 @@ My having fun making a 32-bit (for now) kernel and maybe some other stuff to go 
  * [-] printf and other clib (a bit)
  * [x] Paging
  * [x] Dynamic memory
- * [ ] Virtual file system
+ * [x] Virtual file system
  * [ ] multiprocessing
  * [ ] user mode
 
 ## Build Requirements
 
  * nasm
- * gcc toolchain for elf32
+ * gcc toolchain for i386
+ * genisoimage
 
-## Building on linux
+## About
 
-Just run `make -s`. If you have qemu, you can run the script `qemu.sh` which will build the repo and start it with
-qemu in curses mode.
+### Boot
+The OS boots with grub legacy bootloader with the kernel loaded as an elf
+binary and the initrd image loaded as multiboot module.
 
-## Debugging
+### IDT/IRQs
+The OS has a minimal idt to handle cpu faults.  No syscalls yet (no user mode
+haha).  The OS just has irqs for keyboard input.
 
-Run `qemu.sh -s -S` in one terminal and `gdb.sh` in the other
+### Memory Allocation
+The OS uses a custom design for memory allocation. I didn't really research
+established algorithms much so the implementation is pretty naive. The heap
+is just a doubly linked list where each block header points to the next.
+Each block header contains the size of the block and if it is used or not.
+When a block is freed, it merges with any free neighbors to become a larger
+free block.  To allocate memory, the list is traversed until the best
+possible block is found.
+
+### Initial Ram Disk
+The initrd uses a custom read-only filesystem.  The filesystem consists of
+a static 256 entry table of dirents, and a 256 entry table of inodes followed
+by the file data.
+
+
+### Virtual filesystem
+The virtual filesystem is based on abstract dirent classes which are generated
+by a filesystem driver and then the vfs recursively traverses the directory
+tree to resolve a path.
 
 ## With lots of help from
 
