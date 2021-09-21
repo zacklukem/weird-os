@@ -55,7 +55,7 @@
 #define S_ISBLK(m) ((m)&S_IFBLK == S_IFBLK) // Test for a block special file.
 #define S_ISCHR(m)                                                             \
   ((m)&S_IFCHR == S_IFCHR) // Test for a character special file.
-#define S_ISDIR(m) ((m)&S_IFDIR == S_IFDIR) // Test for a directory.
+#define S_ISDIR(m) (((m)&S_IFDIR) == S_IFDIR) // Test for a directory.
 #define S_ISFIFO(m)                                                            \
   ((m)&S_IFIFO == S_IFIFO) // Test for a pipe or FIFO special file.
 #define S_ISREG(m) ((m)&S_IFREG == S_IFREG)    // Test for a regular file.

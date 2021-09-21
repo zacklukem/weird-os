@@ -112,8 +112,7 @@ class dirent {
 public:
   dirent(const char *ident, weak<inode> m_inode,
          util::optional<rc<dirent>> parent)
-      : ident(ident), inode_id(m_inode.lock()->id), m_inode(m_inode),
-        parent(parent), children(){};
+      : ident(ident), m_inode(m_inode), parent(parent), children(){};
   virtual ~dirent(){};
 
   const char *ident; ///< The string identifier of this direntry

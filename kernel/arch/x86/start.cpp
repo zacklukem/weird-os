@@ -1,8 +1,10 @@
 #include <arch/x86/gdt.h>
 #include <arch/x86/idt.h>
 #include <arch/x86/irq.h>
+#include <arch/x86/multiboot.h>
 #include <assert.h>
 #include <kernel/fs/fs.h>
+#include <kernel/fs/initrd.h>
 #include <kernel/kb.h>
 #include <kernel/kmalloc.h>
 #include <kernel/page.h>
@@ -33,6 +35,9 @@ extern "C" void __kernel_main__() {
 
   irq_install();
   printk("irq installed\n");
+
+  fs::initrd_location = *((uint32_t *)get_multiboot_header().mods_addr);
+  fs::initrd_end = *(uint32_t *)(get_multiboot_header().mods_addr + 4);
 
   install_keyboard();
   printk("keyboard installed\n");

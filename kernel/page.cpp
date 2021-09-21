@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <kernel/fs/initrd.h>
 #include <kernel/kmalloc.h>
 #include <kernel/page.h>
 #include <string.h>
@@ -79,14 +80,15 @@ void free_frame(page *page) {
   }
 }
 
-#define KHEAP_START 0xc0000000
-#define KHEAP_SIZE 0x10000
+#define KHEAP_START 0xb0000000
+#define KHEAP_SIZE 0x100000
 
 /**
  * Sets up the environment, page directories etc and
  * enables paging.
  */
 void initialise_paging() {
+  _internal_placement_address = fs::initrd_end;
   // The size of physical memory. For the moment we
   // assume it is 16MB big.
   uint32_t mem_end_page = 0x1000000;
@@ -97,7 +99,9 @@ void initialise_paging() {
 
   // Let's make a page directory.
   kernel_directory = (page_directory *)kmalloc_a(sizeof(page_directory));
+
   memset(kernel_directory, 0, sizeof(page_directory));
+
   current_directory = kernel_directory;
 
   // We need to identity map (phys addr = virt addr) from
@@ -117,9 +121,6 @@ void initialise_paging() {
   // Now allocate those pages we mapped earlier.
   for (i = KHEAP_START; i < KHEAP_START + KHEAP_SIZE; i += 0x1000)
     alloc_frame(get_page(i, 1, kernel_directory), 0, 0);
-
-  // Before we enable paging, we must register our page fault handler.
-  // register_interrupt_handler(14, page_fault);
 
   // Now, enable paging!
   switch_page_directory(kernel_directory);
@@ -145,12 +146,13 @@ page *get_page(uint32_t address, int make, page_directory *dir) {
   address /= 0x1000;
   // Find the page table containing this address.
   uint32_t table_idx = address / 1024;
-  if (dir->tables[table_idx]) // If this table is already assigned
-  {
+  // If this table is already assigned
+  if (dir->tables[table_idx]) {
     return &dir->tables[table_idx]->pages[address % 1024];
   } else if (make) {
     uint32_t tmp;
     dir->tables[table_idx] = (page_table *)kmalloc_ap(sizeof(page_table), &tmp);
+    // TODO: look at this?
     memset(dir->tables[table_idx], 0, 0x1000);
     dir->tables_physical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
     return &dir->tables[table_idx]->pages[address % 1024];
@@ -158,8 +160,3 @@ page *get_page(uint32_t address, int make, page_directory *dir) {
     return 0;
   }
 }
-
-/**
- * Handler for page faults.
- */
-void page_fault(regs *regs) {}

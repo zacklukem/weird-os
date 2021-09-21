@@ -6,3 +6,6 @@ man/
 tests/test/list_gen.h
 null.d
 compile_commands.json
+os.iso
+iso/boot/kernel.elf
+iso/boot/initrd.img

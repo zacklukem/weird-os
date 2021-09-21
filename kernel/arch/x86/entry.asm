@@ -1,5 +1,16 @@
 [bits 32]
 
+; Flags constants
+MULTIBOOT_PAGE_ALIGN  equ 0x1
+MULTIBOOT_MEMORY_INFO  equ 0x2
+MULTIBOOT_AOUT_KLUDGE  equ 0x10000
+
+; Magic ~~~~~~pow~~~~
+MULTIBOOT_HEADER_MAGIC  equ 0x1BADB002
+MULTIBOOT_HEADER_FLAGS  equ MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO ; | MULTIBOOT_AOUT_KLUDGE
+; More magical voodoo
+MULTIBOOT_CHECKSUM  equ -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
+
 global start
 extern __kernel_main__
 
@@ -7,24 +18,10 @@ extern __kernel_main__
 extern code_addr
 extern bss_addr
 extern end_addr
-
-start:
-  ; set address of the stack
-  mov esp, _sys_stack
-  jmp stublet
+extern mb_header_val
 
 align 4
 mboot:
-  ; Flags constants
-  MULTIBOOT_PAGE_ALIGN  equ 0x1
-  MULTIBOOT_MEMORY_INFO  equ 0x2
-  MULTIBOOT_AOUT_KLUDGE  equ 0x10000
-
-  ; Magic ~~~~~~pow~~~~
-  MULTIBOOT_HEADER_MAGIC  equ 0x1BADB002
-  MULTIBOOT_HEADER_FLAGS  equ MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_AOUT_KLUDGE
-  ; More magical voodoo
-  MULTIBOOT_CHECKSUM  equ -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
 
   ; Actually put the headers  here
   dd MULTIBOOT_HEADER_MAGIC
@@ -33,13 +30,25 @@ mboot:
 
   ; AOUT kludge - must be physical addresses. Make a note of these:
   ; The linker script fills in the data for these ones!
-  dd mboot
-  dd code_addr
-  dd bss_addr
-  dd end_addr
-  dd start
+  ;dd mboot
+  ;dd code_addr
+  ;dd bss_addr
+  ;dd end_addr
+  ;dd start
+
+start:
+  mov [mb_header_val], ebx
+
+;  lea ebx, [higher_half]
+;  jmp ebx
+
+; higher_half:
+  ; set address of the stack
+  mov esp, _sys_stack
+  jmp stublet
 
 stublet:
+
   call __kernel_main__ ; call the kernel main in start.c
   jmp $                ; jump forever
 
