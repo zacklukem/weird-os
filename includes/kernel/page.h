@@ -2,6 +2,7 @@
 #define INCLUDES_KERNEL_PAGE_H
 
 #include <arch/x86/regs.h>
+#include <stdint.h>
 
 extern struct page_directory *kernel_directory;
 extern struct page_directory *current_directory;

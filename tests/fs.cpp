@@ -1,7 +1,7 @@
 #include "test/tests.h"
 #include <kernel/fs/fs.h>
 
-TEST_CASE(fs_basic_udev) {
+TEST_CASE(fs_basic_initrd) {
   auto dirent_opt = fs::resolve_path("/test.txt");
   ASSERT(dirent_opt.has_value());
   auto dirent = dirent_opt.value();
@@ -11,4 +11,11 @@ TEST_CASE(fs_basic_udev) {
   int l = ino->read(buf, 10, 0);
   ASSERT(strcmp(buf, "hi\n"));
   ASSERT(l == 3);
+}
+
+TEST_CASE(fs_basic_udev) {
+  auto dirent_opt = fs::resolve_path("/dev/tty0");
+  ASSERT(dirent_opt.has_value());
+  auto dirent = dirent_opt.value();
+  auto ino = dirent->m_inode.lock();
 }

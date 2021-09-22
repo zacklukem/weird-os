@@ -122,7 +122,22 @@ public:
 
   const util::list_iterator<rc<dirent>> opendir() { return children.begin(); }
 
-  virtual optional<rc<dirent>> get_child(const char *name) {
+  virtual void update_cache(){};
+
+  optional<util::list_iterator<rc<dirent>>> get_child_iter(const char *name) {
+    update_cache();
+    for (auto current = children.begin(); current != children.end();
+         ++current) {
+
+      if (strcmp(name, (*current)->ident)) {
+        return current;
+      }
+    }
+    return util::nullopt;
+  }
+
+  optional<rc<dirent>> get_child(const char *name) {
+    update_cache();
     for (auto &dirent : children) {
       if (strcmp(name, dirent->ident)) {
         return dirent;
@@ -135,6 +150,8 @@ public:
   virtual optional<rc<dirent>> get_parent() { return parent; }
 
   util::optional<rc<dirent>> parent; ///< A reference to this dirent's parent
+  bool locked = false;
+
 protected:
   // For cacheing
   util::list<rc<dirent>> children; ///< the dirent's children

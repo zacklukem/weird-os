@@ -4,6 +4,7 @@ build/
 html/
 man/
 tests/test/list_gen.h
+tests/test/head_gen.h
 null.d
 compile_commands.json
 os.iso

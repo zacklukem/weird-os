@@ -13,7 +13,14 @@ void vfs::mount_device(const char *path, rc<fs_device> device) {
     root_dirent = mount_dirent;
     mount_dirent->parent = util::nullopt;
   } else {
-    assert(false && "no good");
+    auto dirent_opt = resolve_path(path);
+    assert(dirent_opt.has_value() && "Bad mount");
+    auto &dirent = dirent_opt.value();
+    mount_dirent->ident = path;
+    // TODO: make this readable
+    assert(dirent->parent.has_value() && "VFS issue");
+    auto &parent = dirent->parent.value();
+    parent->get_child_iter(dirent->ident).value().p->value = mount_dirent;
   }
 
   // Place this dirent in the proper place

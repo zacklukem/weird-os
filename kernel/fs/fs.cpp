@@ -12,10 +12,11 @@ rc<initrd> initrd_dev;
 int fs::init_fs() {
   virt_fs = util::make_rc<vfs>();
 
-  // virt_udev = util::make_rc<udev>(0);
   initrd_dev = util::make_rc<initrd>(0);
+  virt_udev = util::make_rc<udev>(1);
 
   virt_fs->mount_device("/", initrd_dev);
+  virt_fs->mount_device("/dev", virt_udev);
   return 0;
 }
 
