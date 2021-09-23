@@ -60,4 +60,6 @@ struct page *get_page(uint32_t address, int make, struct page_directory *dir);
 
 void alloc_frame(page *page, int is_kernel, int is_writeable);
 
+uint32_t get_phys(uint32_t address, page_directory *dir);
+
 #endif // INCLUDES_KERNEL_PAGE_H

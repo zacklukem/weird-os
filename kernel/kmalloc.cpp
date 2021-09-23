@@ -104,16 +104,16 @@ static struct block_header *get_suitable_block(size_t size, int page_align,
     best = best->next;
   }
 
+  uint32_t required_size = size;
+  if (page_align) {
+    uint32_t mem_address = (uint32_t)get_memory_address(current);
+    uint32_t distance = mem_address & 0xfff; // last 12 bits are the distance
+    required_size += distance;
+  }
+
   while (current) {
     // Get smallest unused block with size at least equal to given size
     if (!is_used(current->magic)) {
-      uint32_t required_size = size;
-      if (page_align) {
-        uint32_t mem_address = (uint32_t)get_memory_address(current);
-        uint32_t distance =
-            mem_address & 0xfff; // last 12 bits are the distance
-        required_size += distance;
-      }
       // if not page aligned, we only need the smallest unused block big
       // enough for our data
       if (current->size >= required_size &&
@@ -248,10 +248,7 @@ static uint32_t kmalloc_internal(uint32_t sz, int align, uint32_t *phys) {
   if (kheap != 0) {
     void *addr = alloc_internal(sz, align, kheap);
     if (phys != 0) {
-      return ((uint32_t)addr - 0xd0000000) + 0x400000;
-
-      // struct page *page = get_page((uint32_t)addr, 0, kernel_directory);
-      //*phys = page->frame * 0x1000 + ((uint32_t)addr & 0xfff);
+      *phys = get_phys((uint32_t)addr, kernel_directory);
     }
     return (uint32_t)addr;
   } else {

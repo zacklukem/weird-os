@@ -91,6 +91,23 @@ page_directory test_dir __attribute__((aligned(0x1000)));
 #define KERNEL_PAGE_NUMBER (KERNEL_HIGHER_HALF >> 22)
 #define KHEAP_PAGE_NUMBER (KHEAP_START >> 22)
 
+page_directory *fork_page() {
+  uint32_t phys;
+
+  auto dir = (page_directory *)kmalloc_ap(sizeof(page_directory), &phys);
+
+  memset(dir, 0, sizeof(page_directory));
+
+  // setup 4MB for now
+  // 4MB = 1024 pages
+  dir->tables_physical[KERNEL_PAGE_NUMBER] = 0x83;
+  dir->tables_physical[KHEAP_PAGE_NUMBER] = 0x400083;
+
+  dir->physical_addr = phys;
+
+  return dir;
+}
+
 /**
  * Sets up the environment, page directories etc and
  * enables paging.
@@ -110,19 +127,7 @@ void initialise_paging() {
 
   // Setup kernel directory
 
-  uint32_t phys;
-
-  kernel_directory =
-      (page_directory *)kmalloc_ap(sizeof(page_directory), &phys);
-
-  memset(kernel_directory, 0, sizeof(page_directory));
-
-  // setup 4MB for now
-  // 4MB = 1024 pages
-  kernel_directory->tables_physical[KERNEL_PAGE_NUMBER] = 0x83;
-  kernel_directory->tables_physical[KHEAP_PAGE_NUMBER] = 0x400083;
-
-  kernel_directory->physical_addr = phys;
+  kernel_directory = fork_page();
 
   // Lock low 2048 pages
   for (uint32_t i = 0; i < INDEX_FROM_BIT(0x800); i++) {
@@ -132,8 +137,6 @@ void initialise_paging() {
   switch_page_directory(kernel_directory);
 
   init_kernal_heap(KHEAP_SIZE, (void *)KHEAP_START);
-
-  printk("hello higher half\n");
 }
 
 extern uint32_t boot_page_directory;
@@ -146,6 +149,18 @@ void switch_page_directory(page_directory *dir) {
   current_directory = dir;
 
   __asm__ __volatile__("mov %0, %%cr3" ::"r"(dir->physical_addr));
+}
+
+uint32_t get_phys(uint32_t address, page_directory *dir) {
+  auto table_idx = (address / 0x1000) / 0x400;
+  uint32_t is_4mb =
+      dir->tables_physical[table_idx] & 0x00000080; // bit 7 is 4mb
+  if (is_4mb) {
+    auto offset = address % 0x400000;
+    return (dir->tables_physical[table_idx] & 0xfffff000) + offset;
+  }
+  assert(false && "todo: 4kb page phys addres");
+  return 0;
 }
 
 /**
@@ -163,7 +178,7 @@ page *get_page(uint32_t address, int make, page_directory *dir) {
     uint32_t addr;
     dir->tables[table_idx] =
         (page_table *)kmalloc_ap(sizeof(page_table), &addr);
-    // TODO: look at this?
+    assert(!(addr & 0xfff) && "invalid page aligned malloc");
     memset(dir->tables[table_idx], 0, 0x1000);
     dir->tables_physical[table_idx] = addr | 0x7; // PRESENT, RW, US.
     return &dir->tables[table_idx]->pages[address % 1024];
