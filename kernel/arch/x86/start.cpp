@@ -9,6 +9,7 @@
 #include <kernel/kmalloc.h>
 #include <kernel/page.h>
 #include <kernel/printk.h>
+#include <kernel/process.h>
 #include <kernel/serial.h>
 #include <kernel/timer.h>
 #include <stdio.h>
@@ -54,6 +55,10 @@ extern "C" void __kernel_main__() {
   __asm__("sti");
 
   fs::init_fs();
+
+  auto hi_de = fs::resolve_path("/hi");
+
+  exec_process(hi_de.value());
 
   // Enable interupts to start using the keyboard
 

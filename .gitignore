@@ -10,3 +10,6 @@ compile_commands.json
 os.iso
 iso/boot/kernel.elf
 iso/boot/initrd.img
+initrd/hi
+initrd/hi.d
+initrd/hi_elf

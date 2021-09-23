@@ -58,9 +58,6 @@ void switch_page_directory(struct page_directory *new_page);
  */
 struct page *get_page(uint32_t address, int make, struct page_directory *dir);
 
-/**
- * Handler for page faults.
- */
-void page_fault(struct regs *regs);
+void alloc_frame(page *page, int is_kernel, int is_writeable);
 
 #endif // INCLUDES_KERNEL_PAGE_H

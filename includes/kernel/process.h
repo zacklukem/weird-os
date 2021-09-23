@@ -9,6 +9,8 @@ struct process {
 
 extern struct process kernel_process;
 
+void exec_process(rc<fs::dirent> dirent);
+
 // TODO: Multiprocessing
 #define current() (&kernel_process)
 

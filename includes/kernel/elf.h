@@ -1,6 +1,7 @@
 #ifndef INCLUDES_KERNEL_ELF_H
 #define INCLUDES_KERNEL_ELF_H
 
+#include <assert.h>
 #include <stdint.h>
 
 namespace elf {
@@ -84,10 +85,17 @@ enum sh_type_t : uint32_t {
   SHT_HIUSER = 0x8fffffff
 };
 
+enum sh_flags_t : uint32_t {
+  SHF_WRITE = 0x1,
+  SHF_ALLOC = 0x2,
+  SHF_EXECINSTR = 0x4,
+  SHF_MASKPROC = 0xf0000000
+};
+
 struct section_header_t {
   uint32_t name;
   sh_type_t type;
-  uint32_t flags;
+  sh_flags_t flags;
   uint32_t addr;
   uint32_t offset;
   uint32_t size;
@@ -95,6 +103,71 @@ struct section_header_t {
   uint32_t info;
   uint32_t addralign;
   uint32_t entsize;
+} __attribute__((packed));
+
+enum st_shndx_t : uint32_t {
+  STB_LOCAL = 0,
+  STB_GLOBAL = 1,
+  STB_WEAK = 2,
+  STB_LOPROC = 13,
+  STB_HIPROC = 15
+};
+
+enum st_info_t : uint8_t {
+  STT_NOTYPE = 0,
+  STT_OBJECT = 1,
+  STT_FUNC = 2,
+  STT_SECTION = 3,
+  STT_FILE = 4,
+  STT_LOPROC = 13,
+  STT_HIPROC = 15
+};
+
+struct symbol_t {
+  uint32_t name;
+  uint32_t value;
+  uint32_t size;
+  st_info_t info;
+  uint8_t other;
+  st_shndx_t shndx;
+} __attribute__((packed));
+
+enum p_type_t {
+  PT_NULL = 0,
+  PT_LOAD = 1,
+  PT_DYNAMIC = 2,
+  PT_INTERP = 3,
+  PT_NOTE = 4,
+  PT_SHLIB = 5,
+  PT_PHDR = 6,
+  PT_LOPROC = 0x70000000,
+  PT_HIPROC = 0x7fffffff
+};
+
+struct program_t {
+  p_type_t type;
+  uint32_t offset;
+  uint32_t vaddr;
+  uint32_t paddr;
+  uint32_t filesz;
+  uint32_t memsz;
+  uint32_t flags;
+  uint32_t align;
+};
+
+class elf_decoder {
+public:
+  elf_decoder(void *addr) : addr(addr) {}
+
+  inline elf_header_t *header() {
+    auto hdr = (elf_header_t *)addr;
+    assert(hdr->magic == 0x7f454c46 && "Elf read error");
+
+    return hdr;
+  }
+
+private:
+  void *addr;
 };
 
 } // namespace elf

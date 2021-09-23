@@ -248,8 +248,10 @@ static uint32_t kmalloc_internal(uint32_t sz, int align, uint32_t *phys) {
   if (kheap != 0) {
     void *addr = alloc_internal(sz, align, kheap);
     if (phys != 0) {
-      struct page *page = get_page((uint32_t)addr, 0, kernel_directory);
-      *phys = page->frame * 0x1000 + ((uint32_t)addr & 0xfff);
+      return ((uint32_t)addr - 0xd0000000) + 0x400000;
+
+      // struct page *page = get_page((uint32_t)addr, 0, kernel_directory);
+      //*phys = page->frame * 0x1000 + ((uint32_t)addr & 0xfff);
     }
     return (uint32_t)addr;
   } else {
