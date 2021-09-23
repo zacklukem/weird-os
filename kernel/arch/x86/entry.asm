@@ -11,7 +11,11 @@ MULTIBOOT_HEADER_FLAGS  equ MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO ; | MUL
 ; More magical voodoo
 MULTIBOOT_CHECKSUM  equ -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
 
+KERNEL_VIRTUAL_BASE equ 0xc0000000
+KERNEL_PAGE_NUMBER equ (KERNEL_VIRTUAL_BASE >> 22)
+
 global start
+global boot_page_directory
 extern __kernel_main__
 
 ; Linker script defined addresses
@@ -36,15 +40,52 @@ mboot:
   ;dd end_addr
   ;dd start
 
+section .data
+align 0x1000
+boot_page_directory:
+	dd 0x00000083
+  dd 0x00400083
+  dd 0x00800083
+  dd 0x00c00083
+  times (KERNEL_PAGE_NUMBER - 4) dd 0
+  dd 0x00000083
+  dd 0x00400083
+  dd 0x00800083
+  dd 0x00c00083
+  times (1024 - KERNEL_PAGE_NUMBER) dd 0
+
+section .text
 start:
-  mov [mb_header_val], ebx
+  mov ecx, (boot_page_directory - KERNEL_VIRTUAL_BASE)
+  mov cr3, ecx                                        ; Load Page Directory Base Register.
 
-;  lea ebx, [higher_half]
-;  jmp ebx
+  mov ecx, cr4
+  or ecx, 0x00000010                          ; Set PSE bit in CR4 to enable 4MB pages.
+  mov cr4, ecx
 
-; higher_half:
-  ; set address of the stack
+  mov ecx, cr0
+  or ecx, 0x80000000                          ; Set PG bit in CR0 to enable paging.
+  mov cr0, ecx
+
+  lea ecx, [higher_half]
+  jmp ecx
+
+higher_half:
+  ; Unmap the identity-mapped first 4MB of physical address space. It should not be needed
+	; anymore.
+	mov dword [boot_page_directory], 0
+	mov dword [boot_page_directory + 4], 0
+	mov dword [boot_page_directory + 8], 0
+	mov dword [boot_page_directory + 12], 0
+	invlpg [0]
+
+  ; setup stack
   mov esp, _sys_stack
+
+  add ebx, KERNEL_VIRTUAL_BASE
+  mov [mb_header_val], ebx
+  ; set address of the stack
+
   jmp stublet
 
 stublet:

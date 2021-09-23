@@ -23,21 +23,21 @@ struct page_table {
 
 struct page_directory {
   /**
-   * Array of pointers to pagetables.
-   */
-  struct page_table *tables[1024];
-  /**
    * Array of pointers to the pagetables above, but gives their *physical*
    * location, for loading into the CR3 register.
    */
   uint32_t tables_physical[1024];
+  /**
+   * Array of pointers to pagetables.
+   */
+  struct page_table *tables[1024];
   /**
    * The physical address of tablesPhysical. This comes into play
    * when we get our kernel heap allocated and the directory
    * may be in a different location in virtual memory.
    */
   uint32_t physical_addr;
-};
+} __attribute__((packed));
 
 /**
  * Sets up the environment, page directories etc and

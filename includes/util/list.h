@@ -101,7 +101,9 @@ public:
     while (last->next)
       last = last->next;
     auto out = last->value;
-    last->prev->next = nullptr;
+    if (last->prev) {
+      last->prev->next = nullptr;
+    }
     delete last;
     return out;
   };

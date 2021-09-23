@@ -9,8 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
-extern uint32_t end_addr; // End of kernel code (defined by linker script)
-uint32_t _internal_placement_address = (uint32_t)&end_addr;
+uint32_t _internal_placement_address = 0;
 
 struct heap kheap_s;
 struct heap *kheap = 0;
@@ -29,7 +28,9 @@ static void merge_blocks(struct block_header *first,
   assert(first->next == second && "Headers must be in adjacent");
 
   first->next = second->next;
-  first->next->previous = first;
+  if (first->next) {
+    first->next->previous = first;
+  }
   first->size += second->size + sizeof(struct block_header);
 }
 
@@ -258,8 +259,9 @@ static uint32_t kmalloc_internal(uint32_t sz, int align, uint32_t *phys) {
       _internal_placement_address += 0x1000;
     }
     if (phys) {
-      *phys = _internal_placement_address;
+      *phys = _internal_placement_address - 0xc0000000;
     }
+
     uint32_t tmp = _internal_placement_address;
     _internal_placement_address += sz;
     return tmp;

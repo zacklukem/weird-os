@@ -36,14 +36,18 @@ extern "C" void __kernel_main__() {
   irq_install();
   printk("irq installed\n");
 
-  fs::initrd_location = *((uint32_t *)get_multiboot_header().mods_addr);
-  fs::initrd_end = *(uint32_t *)(get_multiboot_header().mods_addr + 4);
-
-  install_keyboard();
-  printk("keyboard installed\n");
-
   initialise_paging();
   printk("paging initialized\n");
+
+  fs::initrd_location =
+      *((uint32_t *)(get_multiboot_header().mods_addr + 0xc0000000)) +
+      0xc0000000;
+  fs::initrd_end =
+      *(uint32_t *)((get_multiboot_header().mods_addr + 0xc0000000) + 4) +
+      0xc0000000;
+
+  // install_keyboard();
+  // printk("keyboard installed\n");
 
   install_timer();
 

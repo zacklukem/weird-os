@@ -24,7 +24,8 @@ LD := i386-elf-ld
 LDFLAGS := -T link.ld
 
 CC := i386-elf-g++
-CFLAGS := -Werror -Wall -m32 -fno-exceptions -fno-rtti -std=c++1z -ffreestanding -g3 -F dwarf -MMD -MP -Iincludes
+CFLAGS := -Werror -Wall -m32 -fno-exceptions -fno-rtti -std=c++1z -O0\
+					-ffreestanding -g3 -F dwarf -MMD -MP -Iincludes -fno-inline-functions
 #CFLAGS := -m32 -MMD -MP -g3 -F dwarf -Wall -O -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -Iincludes
 
 AS := nasm

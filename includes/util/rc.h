@@ -40,18 +40,22 @@ public:
   };
 
   rc &operator=(const rc &r) {
-    counter->count--;
+    if (counter)
+      counter->count--;
     ptr = (T *)r.ptr;
     counter = r.counter;
-    counter->count++;
+    if (counter)
+      counter->count++;
     return *this;
   };
 
   template <class Y> rc<T> &operator=(const rc<Y> &r) {
-    counter->count--;
+    if (counter)
+      counter->count--;
     ptr = (T *)r.ptr;
     counter = r.counter;
-    counter->count++;
+    if (counter)
+      counter->count++;
     return *this;
   };
 

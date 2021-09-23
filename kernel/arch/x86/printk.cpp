@@ -6,7 +6,7 @@
 #include <string.h>
 
 // The b-8000 is the newest development in our line of video buffers!
-#define VIDEO_BUFFER ((char *)0xb8000)
+#define VIDEO_BUFFER ((char *)0xc00b8000)
 
 #define SCREEN_WIDTH 80
 #define SCREEN_HEIGHT 24

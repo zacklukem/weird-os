@@ -134,7 +134,7 @@ static const char *exception_messages[32] = {
 static void init_idt_entry(uint32_t offset, uint16_t selector, uint8_t type,
                            struct idt_entry *entry) {
   entry->offset_1 = offset & 0xffff;
-  entry->offset_2 = (offset >> 16) & 0xff;
+  entry->offset_2 = (offset >> 16) & 0xffff;
   entry->selector = selector;
   entry->type_attr = type;
   entry->zero = 0x0;

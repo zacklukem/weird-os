@@ -1,7 +1,9 @@
 #include <assert.h>
 #include <kernel/fs/initrd.h>
+#include <kernel/kernel_info.h>
 #include <kernel/kmalloc.h>
 #include <kernel/page.h>
+#include <kernel/printk.h>
 #include <string.h>
 
 // Bit set of frames and their status as free or not
@@ -47,7 +49,7 @@ static uint32_t first_frame() {
       for (uint32_t j = 0; j < 32; j++) {
         uint32_t toTest = 0x1 << j;
         if (!(frames[i] & toTest)) {
-          return i * 4 * 8 + j;
+          return i * 32 + j;
         }
       }
     }
@@ -80,53 +82,61 @@ void free_frame(page *page) {
   }
 }
 
-#define KHEAP_START 0xb0000000
-#define KHEAP_SIZE 0x100000
+#define KHEAP_START 0xd0000000
+// 4MB for kheap
+#define KHEAP_SIZE 0x400000
+
+page_directory test_dir __attribute__((aligned(0x1000)));
+
+#define KERNEL_PAGE_NUMBER (KERNEL_HIGHER_HALF >> 22)
+#define KHEAP_PAGE_NUMBER (KHEAP_START >> 22)
 
 /**
  * Sets up the environment, page directories etc and
  * enables paging.
  */
 void initialise_paging() {
-  _internal_placement_address = fs::initrd_end;
-  // The size of physical memory. For the moment we
-  // assume it is 16MB big.
-  uint32_t mem_end_page = 0x1000000;
+  _internal_placement_address = 0xc0200000;
 
+  // The size of physical memory. For the moment we
+  // assume it is 64MB big.
+  uint32_t mem_end_page = 0x4000000;
+
+  // Setup our frame bitset
+  // TODO: get memory data from multiboot header
   nframes = mem_end_page / 0x1000;
   frames = (uint32_t *)kmalloc(INDEX_FROM_BIT(nframes));
   memset(frames, 0, INDEX_FROM_BIT(nframes));
 
-  // Let's make a page directory.
-  kernel_directory = (page_directory *)kmalloc_a(sizeof(page_directory));
+  // Setup kernel directory
+
+  uint32_t phys;
+
+  kernel_directory =
+      (page_directory *)kmalloc_ap(sizeof(page_directory), &phys);
 
   memset(kernel_directory, 0, sizeof(page_directory));
 
-  current_directory = kernel_directory;
+  // setup 4MB for now
+  // 4MB = 1024 pages
+  kernel_directory->tables_physical[KERNEL_PAGE_NUMBER] = 0x83;
+  kernel_directory->tables_physical[KHEAP_PAGE_NUMBER] = 0x400083;
 
-  // We need to identity map (phys addr = virt addr) from
-  // 0x0 to the end of used memory, so we can access this
-  // transparently, as if paging wasn't enabled.
-  // NOTE that we use a while loop here deliberately.
-  // inside the loop body we actually change placement_address
-  // by calling kmalloc(). A while loop causes this to be
-  // computed on-the-fly rather than once at the start.
-  uint32_t i = 0;
-  while (i < _internal_placement_address) {
-    // Kernel code is readable but not writeable from userspace.
-    alloc_frame(get_page(i, 1, kernel_directory), 0, 0);
-    i += 0x1000;
+  kernel_directory->physical_addr = phys;
+
+  // Lock low 2048 pages
+  for (uint32_t i = 0; i < INDEX_FROM_BIT(0x800); i++) {
+    frames[i] = 0xffffffff;
   }
 
-  // Now allocate those pages we mapped earlier.
-  for (i = KHEAP_START; i < KHEAP_START + KHEAP_SIZE; i += 0x1000)
-    alloc_frame(get_page(i, 1, kernel_directory), 0, 0);
-
-  // Now, enable paging!
   switch_page_directory(kernel_directory);
 
   init_kernal_heap(KHEAP_SIZE, (void *)KHEAP_START);
+
+  printk("hello higher half\n");
 }
+
+extern uint32_t boot_page_directory;
 
 /**
  * Causes the specified page directory to be loaded into the
@@ -134,13 +144,13 @@ void initialise_paging() {
  */
 void switch_page_directory(page_directory *dir) {
   current_directory = dir;
-  __asm__ __volatile__("mov %0, %%cr3" ::"r"(&dir->tables_physical));
-  uint32_t cr0;
-  __asm__ __volatile__("mov %%cr0, %0" : "=r"(cr0));
-  cr0 |= 0x80000000; // Enable paging!
-  __asm__ __volatile__("mov %0, %%cr0" ::"r"(cr0));
+
+  __asm__ __volatile__("mov %0, %%cr3" ::"r"(dir->physical_addr));
 }
 
+/**
+ * get the page entry describing this address's page
+ */
 page *get_page(uint32_t address, int make, page_directory *dir) {
   // Turn the address into an index.
   address /= 0x1000;
@@ -150,11 +160,12 @@ page *get_page(uint32_t address, int make, page_directory *dir) {
   if (dir->tables[table_idx]) {
     return &dir->tables[table_idx]->pages[address % 1024];
   } else if (make) {
-    uint32_t tmp;
-    dir->tables[table_idx] = (page_table *)kmalloc_ap(sizeof(page_table), &tmp);
+    uint32_t addr;
+    dir->tables[table_idx] =
+        (page_table *)kmalloc_ap(sizeof(page_table), &addr);
     // TODO: look at this?
     memset(dir->tables[table_idx], 0, 0x1000);
-    dir->tables_physical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
+    dir->tables_physical[table_idx] = addr | 0x7; // PRESENT, RW, US.
     return &dir->tables[table_idx]->pages[address % 1024];
   } else {
     return 0;
