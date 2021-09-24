@@ -1,7 +1,7 @@
 const char *hi = "hello, user!";
 int a = 0;
 
-void _start() {
+void main() {
   // %eax for syscall_number. %ebx, %ecx, %edx, %esi, %edi, %ebp
   a = 2;
   __asm__ __volatile__("movl $0, %%esi   \n" // offset

@@ -4,8 +4,16 @@
 
 using namespace process;
 
-process_t process::kernel_process;
-process_t *process::current_running_process = &process::kernel_process;
+process_t::process_t(page_directory *directory)
+    : directory(directory), allocator(directory) {}
+
+process_t *process::kernel_process;
+process_t *process::current_running_process;
+
+void process::init_kernel_process(page_directory *directory) {
+  kernel_process = new process_t(directory);
+  current_running_process = kernel_process;
+}
 
 void process::exec_process(rc<fs::dirent> dirent) {
   auto ino = dirent->m_inode.lock();
@@ -20,9 +28,16 @@ void process::exec_process(rc<fs::dirent> dirent) {
 
   elf::elf_loader loader(data);
 
-  loader.load(&current_allocator);
+  auto layout = loader.load(&current_allocator);
 
   free(data);
 
-  __asm__ __volatile__("call %0" ::"r"(loader.entry()));
+  // __asm__ __volatile__("mov %%esp, %0" : "=r"(current()->stack));
+
+  __asm__ __volatile__("mov %0, %%esp" ::"r"(layout.stack));
+  __asm__ __volatile__("call *%0" ::"r"(layout.entry));
+}
+
+void syscall_exit(int retval) {
+  // For now go to kernel code
 }

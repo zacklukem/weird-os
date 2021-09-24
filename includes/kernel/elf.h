@@ -164,6 +164,11 @@ struct program_t {
   uint32_t align;
 };
 
+struct elf_layout_t {
+  uint32_t entry;
+  uint32_t stack;
+};
+
 class elf_loader {
 public:
   elf_loader(void *addr);
@@ -178,7 +183,7 @@ public:
   template <class T> inline T *offset(uint32_t off);
   template <class T> inline T *offset(uint32_t off, uint32_t i);
 
-  void load(page_allocator *allocator);
+  elf_layout_t load(page_allocator *allocator);
   inline uint32_t entry();
 
 private:
@@ -214,7 +219,7 @@ inline section_header_t *elf_loader::section_header(uint32_t i) {
 
 inline uint32_t elf_loader::entry() { return header()->entry; }
 
-void elf_loader::load(page_allocator *allocator) {
+elf_layout_t elf_loader::load(page_allocator *allocator) {
   assert(header()->phnum > 0 && "Not an executable");
   for (uint32_t i = 0; i < header()->phnum; i++) {
     auto ph = program_header(i);
@@ -223,6 +228,8 @@ void elf_loader::load(page_allocator *allocator) {
     allocator->allocate(ph->vaddr, ph->memsz, 0, ph->flags & p_flags_t::PF_W);
     memcpy((void *)ph->vaddr, offset<void>(ph->offset), ph->filesz);
   }
+  allocator->allocate(0, 0x2000, 0, 1);
+  return {.entry = entry(), .stack = 0x2000};
 }
 
 } // namespace elf

@@ -4,6 +4,7 @@
 #include <kernel/kmalloc.h>
 #include <kernel/page.h>
 #include <kernel/printk.h>
+#include <kernel/process.h>
 #include <string.h>
 
 // Bit set of frames and their status as free or not
@@ -138,6 +139,8 @@ void initialise_paging() {
   switch_page_directory(kernel_directory);
 
   init_kernal_heap(KHEAP_SIZE, (void *)KHEAP_START);
+
+  process::init_kernel_process(kernel_directory);
 }
 
 extern uint32_t boot_page_directory;

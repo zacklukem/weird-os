@@ -63,17 +63,18 @@ extern "C" void __kernel_main__() {
 
   vga::init_vga();
 
+  // TODO: not this:
   fs::syscall_open_at(0, "/dev/vga", O_WRONLY);
+
+#ifdef TEST_RUN_MODE
+  __run_kernel_tests__();
+  // heap_info();
+#endif
 
   // run proc
   auto hi_de = fs::resolve_path("/hi");
 
   process::exec_process(hi_de.value());
-
-#ifdef TEST_RUN_MODE
-  // __run_kernel_tests__();
-  // heap_info();
-#endif
 
   while (1)
     __asm__("hlt");

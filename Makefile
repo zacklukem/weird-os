@@ -19,8 +19,6 @@ KERNEL_C_DEPS := $(KERNEL_C_SRCS:%=$(BUILD_DIR)/%.d)
 KERNEL_SRCS := $(shell find $(KERNEL_SRC) -name "*.asm") $(KERNEL_C_SRCS)
 KERNEL_OBJS := $(KERNEL_SRCS:%=$(BUILD_DIR)/%.o)
 
-INITRD_OBJS := $(shell find initrd/ -type f) initrd/hi
-
 DEFS :=
 
 LD := i386-elf-ld
@@ -50,14 +48,11 @@ $(BUILD_DIR)/os.iso: $(BUILD_DIR)/test_kernel.elf iso/boot/initrd.img
 
 iso/boot/initrd.img: $(BUILD_DIR)/makefs $(INITRD_OBJS)
 	printf "%-40s \033[0;33mCreating initrd...\033[0m\r" "$@"
+	cd init
+	make
+	cd ..
 	$(BUILD_DIR)/makefs initrd iso/boot/initrd.img
 	printf "%-40s \033[0;32mCreated.            \033[0m\n" "$@"
-
-initrd/hi: initrd/hi.c
-	printf "%-40s \033[0;33mBuilding...\033[0m\r" "$@"
-	i386-elf-gcc initrd/hi.c -nostdlib -o initrd/hi
-	printf "%-40s \033[0;32mBuilt.            \033[0m\n" "$@"
-
 
 $(BUILD_DIR)/makefs: scripts/makefs.c
 	printf "%-40s \033[0;33mCompiling...\033[0m\r" "$@"

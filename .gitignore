@@ -1,15 +1,19 @@
 build/
-*.swp
+**/*.swp
 # Doxygen files
 html/
 man/
+
 tests/test/list_gen.h
 tests/test/head_gen.h
-null.d
 compile_commands.json
-os.iso
-iso/boot/kernel.elf
-iso/boot/initrd.img
+
 initrd/hi
-initrd/hi.d
-initrd/hi_elf
+
+**/*.iso
+**/*.elf
+**/*.img
+**/*.o
+**/*.a
+**/*.d
+
