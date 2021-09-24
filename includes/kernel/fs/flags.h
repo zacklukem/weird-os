@@ -20,6 +20,8 @@
 #define S_IRWXO                                                                \
   S_IROTH | S_IWOTH | S_IXOTH // Read, write, execute/search by others.
 
+#define S_IRWXA (S_IRWXU | S_IRWXG | S_IRWXO)
+
 #define S_ISUID 04000 // Set-user-ID on execution.
 #define S_ISGID 02000 // Set-group-ID on execution.
 #define S_ISVTX 01000 // On directories, restricted deletion flag.

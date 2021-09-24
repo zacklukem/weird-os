@@ -12,6 +12,7 @@ uint32_t nframes;
 
 page_directory *kernel_directory;
 page_directory *current_directory;
+page_allocator current_allocator;
 
 // Macros used in the bitset algorithms.
 #define INDEX_FROM_BIT(a) (a / (8 * 4))
@@ -147,6 +148,7 @@ extern uint32_t boot_page_directory;
  */
 void switch_page_directory(page_directory *dir) {
   current_directory = dir;
+  current_allocator = page_allocator(current_directory);
 
   __asm__ __volatile__("mov %0, %%cr3" ::"r"(dir->physical_addr));
 }
@@ -185,4 +187,20 @@ page *get_page(uint32_t address, int make, page_directory *dir) {
   } else {
     return 0;
   }
+}
+
+page_allocator::page_allocator() : directory(nullptr){};
+
+page_allocator::page_allocator(page_directory *pd) : directory(pd) {}
+int page_allocator::allocate(uint32_t virt_addr, uint32_t size, int is_kernel,
+                             int is_writable) {
+  virt_addr &= 0xfffff000;
+  if (size & 0xfff)
+    size = (size & 0xfffff000) + 0x1000;
+
+  for (uint32_t i = virt_addr; i < virt_addr + size; i += 0x1000) {
+    alloc_frame(get_page(i, 1, directory), is_kernel, is_writable);
+  }
+
+  return 0;
 }

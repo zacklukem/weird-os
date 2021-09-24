@@ -32,6 +32,14 @@ using util::weak;
 
 namespace fs {
 
+class vfs;
+class udev;
+class initrd;
+
+extern rc<vfs> virt_fs;
+extern rc<udev> virt_udev;
+extern rc<initrd> initrd_dev;
+
 #define FD_MAX 512 // Max file descriptors
 
 // Forward declarations
@@ -43,6 +51,7 @@ struct fdtable;
 int init_fs();
 
 // Syscalls for filesystem
+int syscall_open_at(int fildes, const char *path, int oflag);
 ssize_t syscall_read(int fildes, void *buf, size_t nbyte, off_t offset);
 ssize_t syscall_write(int fildes, const void *buf, size_t n, off_t offset);
 int syscall_close(int fildes);

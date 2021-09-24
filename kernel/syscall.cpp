@@ -1,4 +1,6 @@
+#include <arch/x86/regs.h>
 #include <kernel/fs/fs.h>
+#include <kernel/printk.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -9,28 +11,30 @@
 // int syscall_open(const char *path, int oflag);
 //
 
-#define A(ty) va_arg(args, ty)
+#define A(i, ty) ((ty)args[i])
 
 #define SYSCALL(id, func, args...)                                             \
   case id:                                                                     \
     func(args);                                                                \
     break
 
+// %eax for syscall_number. %ebx, %ecx, %edx, %esi, %edi, %ebp
+
 /**
  * Handle syscalls (called from assembly isr)
  */
-extern "C" void syscall_handler(uint32_t syscall_num, ...) {
-  va_list args;
-  va_start(args, syscall_num);
+extern "C" void syscall_handler(struct regs *r) {
+  uint32_t syscall_num = r->eax;
+  uint32_t args[] = {r->ebx, r->ecx, r->edx, r->esi, r->edi, r->ebp};
 
   switch (syscall_num) {
-    SYSCALL(0, fs::syscall_open, A(const char *), A(int));
-    SYSCALL(1, fs::syscall_close, A(int));
-    SYSCALL(2, fs::syscall_read, A(int), A(void *), A(size_t), A(off_t));
-    SYSCALL(3, fs::syscall_write, A(int), A(const void *), A(size_t), A(off_t));
+    SYSCALL(0, fs::syscall_open, A(0, const char *), A(1, int));
+    SYSCALL(1, fs::syscall_close, A(0, int));
+    SYSCALL(2, fs::syscall_read, A(0, int), A(1, void *), A(2, size_t),
+            A(3, off_t));
+    SYSCALL(3, fs::syscall_write, A(0, int), A(1, const void *), A(2, size_t),
+            A(3, off_t));
   default:
-    printf("Invalid syscall");
+    printf("Invalid syscall %d", syscall_num);
   }
-
-  va_end(args);
 }

@@ -19,7 +19,6 @@ udev::udev(dev_t id) : fs_device(id) {
   root_inode->rdevice = id;
   // tty0 entry
   auto tty0 = create_tty(0);
-  root_dirent->add_child(tty0->m_dirent);
 
   inode_cache.set(root_inode->id, root_inode);
 }
@@ -44,6 +43,11 @@ rc<inode> udev::create_tty(int num) {
 
   auto tty_inode = util::make_rc<fifo>(tty_dirent, get_inode_id(),
                                        S_IRWXO | S_IRWXG | S_IRWXU);
+
+  tty_dirent->inode_id = tty_inode->id;
+  tty_dirent->m_inode = tty_inode;
+
+  root_dirent->add_child(tty_dirent);
 
   inode_cache.set(tty_inode->id, tty_inode);
 

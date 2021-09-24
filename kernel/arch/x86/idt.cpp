@@ -86,8 +86,8 @@ void isr80();
 #define ENABLED 0x80
 
 // Set int gate bits
-#define INT_GATE 0x0e
-//#define TRAP_GATE 0xf
+#define INT_GATE 0xe
+#define TRAP_GATE 0xf
 //#define TASK_GATE 0x5
 
 /**
@@ -163,38 +163,38 @@ void init_idt() {
   idt_descriptor.address = (size_t)&idt;
 
   // Initialize the IDT exceptions
-  init_idt_entry((uint32_t)isr0, 0x08, ENABLED | INT_GATE, &idt[0]);
-  init_idt_entry((uint32_t)isr1, 0x08, ENABLED | INT_GATE, &idt[1]);
-  init_idt_entry((uint32_t)isr2, 0x08, ENABLED | INT_GATE, &idt[2]);
-  init_idt_entry((uint32_t)isr3, 0x08, ENABLED | INT_GATE, &idt[3]);
-  init_idt_entry((uint32_t)isr4, 0x08, ENABLED | INT_GATE, &idt[4]);
-  init_idt_entry((uint32_t)isr5, 0x08, ENABLED | INT_GATE, &idt[5]);
-  init_idt_entry((uint32_t)isr6, 0x08, ENABLED | INT_GATE, &idt[6]);
-  init_idt_entry((uint32_t)isr7, 0x08, ENABLED | INT_GATE, &idt[7]);
-  init_idt_entry((uint32_t)isr8, 0x08, ENABLED | INT_GATE, &idt[8]);
-  init_idt_entry((uint32_t)isr9, 0x08, ENABLED | INT_GATE, &idt[9]);
-  init_idt_entry((uint32_t)isr10, 0x08, ENABLED | INT_GATE, &idt[10]);
-  init_idt_entry((uint32_t)isr11, 0x08, ENABLED | INT_GATE, &idt[11]);
-  init_idt_entry((uint32_t)isr12, 0x08, ENABLED | INT_GATE, &idt[12]);
-  init_idt_entry((uint32_t)isr13, 0x08, ENABLED | INT_GATE, &idt[13]);
-  init_idt_entry((uint32_t)isr14, 0x08, ENABLED | INT_GATE, &idt[14]);
-  init_idt_entry((uint32_t)isr15, 0x08, ENABLED | INT_GATE, &idt[15]);
-  init_idt_entry((uint32_t)isr16, 0x08, ENABLED | INT_GATE, &idt[16]);
-  init_idt_entry((uint32_t)isr17, 0x08, ENABLED | INT_GATE, &idt[17]);
-  init_idt_entry((uint32_t)isr18, 0x08, ENABLED | INT_GATE, &idt[18]);
-  init_idt_entry((uint32_t)isr19, 0x08, ENABLED | INT_GATE, &idt[19]);
-  init_idt_entry((uint32_t)isr20, 0x08, ENABLED | INT_GATE, &idt[20]);
-  init_idt_entry((uint32_t)isr21, 0x08, ENABLED | INT_GATE, &idt[21]);
-  init_idt_entry((uint32_t)isr22, 0x08, ENABLED | INT_GATE, &idt[22]);
-  init_idt_entry((uint32_t)isr23, 0x08, ENABLED | INT_GATE, &idt[23]);
-  init_idt_entry((uint32_t)isr24, 0x08, ENABLED | INT_GATE, &idt[24]);
-  init_idt_entry((uint32_t)isr25, 0x08, ENABLED | INT_GATE, &idt[25]);
-  init_idt_entry((uint32_t)isr26, 0x08, ENABLED | INT_GATE, &idt[26]);
-  init_idt_entry((uint32_t)isr27, 0x08, ENABLED | INT_GATE, &idt[27]);
-  init_idt_entry((uint32_t)isr28, 0x08, ENABLED | INT_GATE, &idt[28]);
-  init_idt_entry((uint32_t)isr29, 0x08, ENABLED | INT_GATE, &idt[29]);
-  init_idt_entry((uint32_t)isr30, 0x08, ENABLED | INT_GATE, &idt[30]);
-  init_idt_entry((uint32_t)isr31, 0x08, ENABLED | INT_GATE, &idt[31]);
+  init_idt_entry((uint32_t)isr0, 0x08, ENABLED | TRAP_GATE, &idt[0]);
+  init_idt_entry((uint32_t)isr1, 0x08, ENABLED | TRAP_GATE, &idt[1]);
+  init_idt_entry((uint32_t)isr2, 0x08, ENABLED | TRAP_GATE, &idt[2]);
+  init_idt_entry((uint32_t)isr3, 0x08, ENABLED | TRAP_GATE, &idt[3]);
+  init_idt_entry((uint32_t)isr4, 0x08, ENABLED | TRAP_GATE, &idt[4]);
+  init_idt_entry((uint32_t)isr5, 0x08, ENABLED | TRAP_GATE, &idt[5]);
+  init_idt_entry((uint32_t)isr6, 0x08, ENABLED | TRAP_GATE, &idt[6]);
+  init_idt_entry((uint32_t)isr7, 0x08, ENABLED | TRAP_GATE, &idt[7]);
+  init_idt_entry((uint32_t)isr8, 0x08, ENABLED | TRAP_GATE, &idt[8]);
+  init_idt_entry((uint32_t)isr9, 0x08, ENABLED | TRAP_GATE, &idt[9]);
+  init_idt_entry((uint32_t)isr10, 0x08, ENABLED | TRAP_GATE, &idt[10]);
+  init_idt_entry((uint32_t)isr11, 0x08, ENABLED | TRAP_GATE, &idt[11]);
+  init_idt_entry((uint32_t)isr12, 0x08, ENABLED | TRAP_GATE, &idt[12]);
+  init_idt_entry((uint32_t)isr13, 0x08, ENABLED | TRAP_GATE, &idt[13]);
+  init_idt_entry((uint32_t)isr14, 0x08, ENABLED | TRAP_GATE, &idt[14]);
+  init_idt_entry((uint32_t)isr15, 0x08, ENABLED | TRAP_GATE, &idt[15]);
+  init_idt_entry((uint32_t)isr16, 0x08, ENABLED | TRAP_GATE, &idt[16]);
+  init_idt_entry((uint32_t)isr17, 0x08, ENABLED | TRAP_GATE, &idt[17]);
+  init_idt_entry((uint32_t)isr18, 0x08, ENABLED | TRAP_GATE, &idt[18]);
+  init_idt_entry((uint32_t)isr19, 0x08, ENABLED | TRAP_GATE, &idt[19]);
+  init_idt_entry((uint32_t)isr20, 0x08, ENABLED | TRAP_GATE, &idt[20]);
+  init_idt_entry((uint32_t)isr21, 0x08, ENABLED | TRAP_GATE, &idt[21]);
+  init_idt_entry((uint32_t)isr22, 0x08, ENABLED | TRAP_GATE, &idt[22]);
+  init_idt_entry((uint32_t)isr23, 0x08, ENABLED | TRAP_GATE, &idt[23]);
+  init_idt_entry((uint32_t)isr24, 0x08, ENABLED | TRAP_GATE, &idt[24]);
+  init_idt_entry((uint32_t)isr25, 0x08, ENABLED | TRAP_GATE, &idt[25]);
+  init_idt_entry((uint32_t)isr26, 0x08, ENABLED | TRAP_GATE, &idt[26]);
+  init_idt_entry((uint32_t)isr27, 0x08, ENABLED | TRAP_GATE, &idt[27]);
+  init_idt_entry((uint32_t)isr28, 0x08, ENABLED | TRAP_GATE, &idt[28]);
+  init_idt_entry((uint32_t)isr29, 0x08, ENABLED | TRAP_GATE, &idt[29]);
+  init_idt_entry((uint32_t)isr30, 0x08, ENABLED | TRAP_GATE, &idt[30]);
+  init_idt_entry((uint32_t)isr31, 0x08, ENABLED | TRAP_GATE, &idt[31]);
 
   // Syscall interupt
   init_idt_entry((uint32_t)isr80, 0x08, ENABLED | INT_GATE, &idt[0x80]);

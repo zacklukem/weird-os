@@ -1,4 +1,7 @@
 #include <arch/x86/port_io.h>
+#include <drivers/vga.h>
+#include <kernel/fs/fs.h>
+#include <kernel/fs/udev.h>
 #include <kernel/printk.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -14,6 +17,8 @@
 #define REG_SCREEN_CTRL 0x3d4
 #define REG_SCREEN_DATA 0x3d5
 
+using namespace vga;
+
 static size_t line_number = 0;   ///< The current cursor line number
 static size_t column_number = 0; ///< The current cursor column
 
@@ -24,7 +29,7 @@ FILE _k_stdout;
 /**
  * Get the cursor offset
  */
-uint16_t get_cursor() {
+uint16_t vga::get_cursor() {
   outb(REG_SCREEN_CTRL, 14);
   int offset = inb(REG_SCREEN_DATA) << 8; // high byte
   outb(REG_SCREEN_CTRL, 15);
@@ -36,7 +41,7 @@ uint16_t get_cursor() {
 /**
  * Set the cursor offset
  */
-void set_cursor(uint16_t offset) {
+void vga::set_cursor(uint16_t offset) {
   outb(REG_SCREEN_CTRL, 14);
   outb(REG_SCREEN_DATA, (offset >> 8) & 0xff); // high byte
   outb(REG_SCREEN_CTRL, 15);
@@ -133,12 +138,32 @@ static int io_flush_handler() {
   return 0;
 }
 
-void k_init_stdout() {
+void k_init_printk() {
   stdout = &_k_stdout;
   stdout->_IO_write_base = out_buffer;
   stdout->_IO_write_ptr = out_buffer;
   stdout->_flush_func = io_flush_handler;
 }
+
+class vga_dev : public fs::inode {
+public:
+  vga_dev(rc<fs::dirent> m_dirent, ino_t id)
+      : fs::inode(m_dirent, id, S_IFCHR | S_IRWXA) {}
+  virtual ~vga_dev() override {}
+  virtual ssize_t read(void *buf, size_t nbyte, off_t offset) override {
+    return 0;
+  };
+  virtual ssize_t write(const void *buf, size_t n, off_t offset) override {
+    const char *buf_c = (char *)buf;
+    size_t i;
+    for (i = 0; i < n; i++) {
+      kputchar(*buf_c++);
+    }
+    return i;
+  }
+};
+
+void vga::init_vga() { fs::virt_udev->make_file<vga_dev>("vga"); }
 
 /**
  * Print a string

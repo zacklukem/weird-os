@@ -49,14 +49,33 @@ extern syscall_handler
 global isr80
 
 isr80:
-  cli
+  push byte 0
+  push byte 0x80
+
   pusha
+  push ds
+  push es
+  push fs
+  push gs
+  mov ax, 0x10   ; Load the Kernel Data Segment descriptor!
+  mov ds, ax
+  mov es, ax
+  mov fs, ax
+  mov gs, ax
+  mov eax, esp   ; Push us the stack
+  cld
   push eax
   mov eax, syscall_handler
-  call eax
+  call eax       ; A special call, preserves the 'eip' register
   pop eax
+  pop gs
+  pop fs
+  pop es
+  pop ds
   popa
+  add esp, 8     ; Cleans up the pushed error code and pushed ISR number
   iret
+
 
 extern cpu_fault_handler
 
@@ -72,6 +91,7 @@ isr_common:
   mov fs, ax
   mov gs, ax
   mov eax, esp   ; Push us the stack
+  cld
   push eax
   mov eax, cpu_fault_handler
   call eax       ; A special call, preserves the 'eip' register

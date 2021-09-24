@@ -3,6 +3,7 @@
 
 #include <kernel/fs/fs.h>
 #include <kernel/fs/fs_device.h>
+#include <util/static_check.h>
 
 namespace fs {
 
@@ -12,6 +13,22 @@ public:
   virtual ~udev() override;
 
   rc<inode> create_tty(int num);
+
+  template <class T, class... Args>
+  rc<T> make_file(const char *name, Args... args) {
+    static_assert(util::is_convertible<T, inode>(),
+                  "T must be a subtype of inode");
+
+    auto dir = util::make_rc<dirent>(name, weak<inode>(), root_dirent);
+    auto ino = util::make_rc<T>(dir, get_inode_id(), args...);
+
+    dir->inode_id = ino->id;
+    dir->m_inode = ino;
+
+    root_dirent->add_child(dir);
+    inode_cache.set(ino->id, ino);
+    return ino;
+  }
 
   virtual optional<rc<inode>> get_inode(ino_t inode) override;
   virtual rc<dirent> mount(const char *name) override;

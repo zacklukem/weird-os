@@ -55,8 +55,7 @@ iso/boot/initrd.img: $(BUILD_DIR)/makefs $(INITRD_OBJS)
 
 initrd/hi: initrd/hi.c
 	printf "%-40s \033[0;33mBuilding...\033[0m\r" "$@"
-	i386-elf-gcc initrd/hi.c -nostdlib -o initrd/hi_elf
-	objcopy -O binary -j .text initrd/hi_elf initrd/hi
+	i386-elf-gcc initrd/hi.c -nostdlib -o initrd/hi
 	printf "%-40s \033[0;32mBuilt.            \033[0m\n" "$@"
 
 
@@ -100,12 +99,13 @@ test: test_setup $(BUILD_DIR)/os.iso
 
 .PHONY: test_debug
 test_debug: DEFS=-DTEST_RUN_MODE
-test_debug: test_setup os.iso
+test_debug: test_setup $(BUILD_DIR)/os.iso
 	./scripts/test.sh -S -s
 
 .PHONY: clean
 clean:
 	rm -r $(BUILD_DIR)
+	rm initrd/hi
 
 .PHONY: test_setup
 test_setup:

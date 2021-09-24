@@ -3,6 +3,7 @@
 #include <arch/x86/irq.h>
 #include <arch/x86/multiboot.h>
 #include <assert.h>
+#include <drivers/vga.h>
 #include <kernel/fs/fs.h>
 #include <kernel/fs/initrd.h>
 #include <kernel/kb.h>
@@ -22,7 +23,7 @@ extern "C" void __run_kernel_tests__();
  * Kernel main function.  Called by entry.asm
  */
 extern "C" void __kernel_main__() {
-  k_init_stdout();
+  k_init_printk();
 
   cleark();
 
@@ -54,16 +55,23 @@ extern "C" void __kernel_main__() {
 
   __asm__("sti");
 
+  // *((char *)0xffffffff) = 0;
+
   fs::init_fs();
 
+  // init drivers
+
+  vga::init_vga();
+
+  fs::syscall_open_at(0, "/dev/vga", O_WRONLY);
+
+  // run proc
   auto hi_de = fs::resolve_path("/hi");
 
   process::exec_process(hi_de.value());
 
-  // Enable interupts to start using the keyboard
-
 #ifdef TEST_RUN_MODE
-  __run_kernel_tests__();
+  // __run_kernel_tests__();
   // heap_info();
 #endif
 

@@ -1,14 +1,13 @@
-void func(int a, ...) {}
+const char *hi = "hello, user!";
+int a = 0;
 
 void _start() {
-  ((char *)0xc00b8000)[0] = 'h';
-  ((char *)0xc00b8000)[1] = 0xf0;
-  ((char *)0xc00b8000)[2] = 'i';
-  ((char *)0xc00b8000)[3] = 0xf0;
-  ((char *)0xc00b8000)[4] = '!';
-  ((char *)0xc00b8000)[5] = 0xf0;
-  func(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-  __asm__ __volatile__("mov $42, %ebx\n"
-                       "mov $41, %eax\n"
-                       "int $0x80\n");
+  // %eax for syscall_number. %ebx, %ecx, %edx, %esi, %edi, %ebp
+  a = 2;
+  __asm__ __volatile__("movl $0, %%esi   \n" // offset
+                       "movl $12, %%edx  \n" // len
+                       "movl %0, %%ecx  \n"  // ptr
+                       "movl $0, %%ebx   \n" // fildes
+                       "movl $3, %%eax   \n" // syscall write
+                       "int $0x80      \n" ::"r"(hi));
 }

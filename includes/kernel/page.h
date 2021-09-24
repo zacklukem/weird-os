@@ -4,8 +4,11 @@
 #include <arch/x86/regs.h>
 #include <stdint.h>
 
+class page_allocator;
+
 extern struct page_directory *kernel_directory;
 extern struct page_directory *current_directory;
+extern page_allocator current_allocator;
 
 struct page {
   uint32_t present : 1;  // Page present in memory
@@ -38,6 +41,17 @@ struct page_directory {
    */
   uint32_t physical_addr;
 } __attribute__((packed));
+
+class page_allocator {
+public:
+  page_allocator();
+  page_allocator(page_directory *pd);
+  int allocate(uint32_t virt_addr, uint32_t size, int is_kernel,
+               int is_writeable);
+
+private:
+  page_directory *directory;
+};
 
 /**
  * Sets up the environment, page directories etc and

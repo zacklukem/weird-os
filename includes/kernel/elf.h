@@ -2,7 +2,9 @@
 #define INCLUDES_KERNEL_ELF_H
 
 #include <assert.h>
+#include <kernel/page.h>
 #include <stdint.h>
+#include <string.h>
 
 namespace elf {
 
@@ -132,7 +134,7 @@ struct symbol_t {
   st_shndx_t shndx;
 } __attribute__((packed));
 
-enum p_type_t {
+enum p_type_t : uint32_t {
   PT_NULL = 0,
   PT_LOAD = 1,
   PT_DYNAMIC = 2,
@@ -142,6 +144,13 @@ enum p_type_t {
   PT_PHDR = 6,
   PT_LOPROC = 0x70000000,
   PT_HIPROC = 0x7fffffff
+};
+
+enum p_flags_t : uint32_t {
+  PF_X = 0x1,
+  PF_W = 0x2,
+  PF_R = 0x4,
+  PF_MASKPROC = 0xf0000000,
 };
 
 struct program_t {
@@ -155,20 +164,66 @@ struct program_t {
   uint32_t align;
 };
 
-class elf_decoder {
+class elf_loader {
 public:
-  elf_decoder(void *addr) : addr(addr) {}
+  elf_loader(void *addr);
+  /**
+   * Get a pointer to the program's elf header
+   */
+  inline elf_header_t *header();
 
-  inline elf_header_t *header() {
-    auto hdr = (elf_header_t *)addr;
-    assert(hdr->magic == 0x7f454c46 && "Elf read error");
+  inline program_t *program_header(uint32_t i);
+  inline section_header_t *section_header(uint32_t i);
 
-    return hdr;
-  }
+  template <class T> inline T *offset(uint32_t off);
+  template <class T> inline T *offset(uint32_t off, uint32_t i);
+
+  void load(page_allocator *allocator);
+  inline uint32_t entry();
 
 private:
   void *addr;
 };
+
+template <class T> inline T *elf_loader::offset(uint32_t off) {
+  return (T *)((uint32_t)addr + off);
+}
+
+template <class T> inline T *elf_loader::offset(uint32_t off, uint32_t i) {
+  return &((T *)((uint32_t)addr + off))[i];
+}
+
+elf_loader::elf_loader(void *addr) : addr(addr) {
+  auto hdr = header();
+  assert(hdr->magic == 0x464c457f && "Elf read error");
+  assert(hdr->version == 1);
+  assert(hdr->ehsize == sizeof(elf_header_t));
+  assert(hdr->phentsize == sizeof(program_t));
+  assert(hdr->shentsize == sizeof(section_header_t));
+}
+
+inline elf_header_t *elf_loader::header() { return (elf_header_t *)addr; }
+
+inline program_t *elf_loader::program_header(uint32_t i) {
+  return offset<program_t>(header()->phoff, i);
+}
+
+inline section_header_t *elf_loader::section_header(uint32_t i) {
+  return offset<section_header_t>(header()->shoff, i);
+}
+
+inline uint32_t elf_loader::entry() { return header()->entry; }
+
+void elf_loader::load(page_allocator *allocator) {
+  assert(header()->phnum > 0 && "Not an executable");
+  for (uint32_t i = 0; i < header()->phnum; i++) {
+    auto ph = program_header(i);
+    if (ph->type != p_type_t::PT_LOAD)
+      continue;
+    allocator->allocate(ph->vaddr, ph->memsz, 0, ph->flags & p_flags_t::PF_W);
+    memcpy((void *)ph->vaddr, offset<void>(ph->offset), ph->filesz);
+  }
+}
 
 } // namespace elf
 
