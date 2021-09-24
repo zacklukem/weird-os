@@ -204,17 +204,6 @@ void init_idt() {
 }
 
 /**
- * Handle syscalls (called from assembly isr)
- */
-extern "C" void syscall_handler(int eax) {
-  char data[16];
-  itoa(eax, data, 10);
-  printk("Handle syscall: ");
-  printk(data);
-  printk("\n");
-}
-
-/**
  * Handle cpu exceptions
  */
 extern "C" void cpu_fault_handler(struct regs *r) {

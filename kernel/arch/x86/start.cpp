@@ -58,7 +58,7 @@ extern "C" void __kernel_main__() {
 
   auto hi_de = fs::resolve_path("/hi");
 
-  exec_process(hi_de.value());
+  process::exec_process(hi_de.value());
 
   // Enable interupts to start using the keyboard
 

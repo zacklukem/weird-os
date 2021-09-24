@@ -1,4 +1,4 @@
-# OS Experiments
+#OS Experiments
 
 My having fun making a 32-bit (for now) kernel and maybe some other stuff to go with it.
 
@@ -10,6 +10,7 @@ My having fun making a 32-bit (for now) kernel and maybe some other stuff to go 
  * [x] Paging
  * [x] Dynamic memory
  * [x] Virtual file system
+ * [ ] Driver API
  * [ ] multiprocessing
  * [ ] user mode
 
@@ -55,4 +56,3 @@ tree to resolve a path.
  * [OS Dev Wiki](https://wiki.osdev.org/Main_Page)
  * [Bran](http://www.osdever.net/bkerndev/Docs/whatsleft.htm)
  * [James](http://www.jamesmolloy.co.uk/tutorial_html/6.-Paging.html)
-

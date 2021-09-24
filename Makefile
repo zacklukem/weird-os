@@ -3,6 +3,8 @@ MAKEFLAGS += --silent
 BUILD_DIR := build
 KERNEL_SRC := kernel clib
 
+FORMAT_FILES := $(shell find . \( -not -wholename "build/*" \) -and \( -name "*.h" -or -name "*.cpp" -or -name "*.c" \))
+
 TEST_SRC := tests
 
 TEST_SRCS := $(shell find $(TEST_SRC) -name "*.cpp")
@@ -114,6 +116,12 @@ test_setup:
 	printf "%-40s \033[0;33mGenerating...\033[0m\r" "$@"
 	./tests/test/setup.sh
 	printf "%-40s \033[0;32mGenerated.            \033[0m\n" "$@"
+
+.PHONY: format
+format: $(FORMAT_FILES)
+	printf "%-40s \033[0;33mFormatting...\033[0m\r" "$@"
+	clang-format -i $(FORMAT_FILES)
+	printf "%-40s \033[0;32mFormatted.            \033[0m\n" "$@"
 
 -include $(KERNEL_C_DEPS)
 -include $(TEST_DEPS)

@@ -3,15 +3,21 @@
 
 #include <kernel/fs/fs.h>
 
-struct process {
+namespace process {
+
+struct process_t {
   fs::fdtable fdtable;
 };
 
-extern struct process kernel_process;
+extern process_t kernel_process;
+extern process_t *current_running_process;
 
 void exec_process(rc<fs::dirent> dirent);
 
+inline process_t *current() { return current_running_process; }
+
+} // namespace process
+
 // TODO: Multiprocessing
-#define current() (&kernel_process)
 
 #endif // INCLUDES_KERNEL_PROCESS_H

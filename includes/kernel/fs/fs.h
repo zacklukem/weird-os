@@ -46,7 +46,7 @@ int init_fs();
 ssize_t syscall_read(int fildes, void *buf, size_t nbyte, off_t offset);
 ssize_t syscall_write(int fildes, const void *buf, size_t n, off_t offset);
 int syscall_close(int fildes);
-int syscall_open(const char *path, int oflag, ...);
+int syscall_open(const char *path, int oflag);
 const util::list_iterator<dirent> *syscall_fdopendir(int fildes);
 const util::list_iterator<dirent> *syscall_opendir(const char *path);
 
