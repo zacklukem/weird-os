@@ -1,9 +1,10 @@
 MAKEFLAGS += --silent
 
 BUILD_DIR := build
-KERNEL_SRC := kernel
+KERNEL_SRC := kernel drivers
 
-FORMAT_FILES := $(shell find . \( -not -wholename "build/*" \) -and \( -name "*.h" -or -name "*.cpp" -or -name "*.c" \))
+FORMAT_FILES := $(shell find . \( -not -wholename "build/*" \) -and            \
+	\( -name "*.h" -or -name "*.cpp" -or -name "*.c" \))
 
 TEST_SRC := tests
 
@@ -23,29 +24,28 @@ INITRD_OBJS := $(shell find initrd/ -type f) initrd/hi
 DEFS :=
 
 LD := i386-elf-ld
-LDFLAGS := -T link.ld
+LDFLAGS := -T scripts/link.ld
 
 CC := i386-elf-g++
-CFLAGS := -Werror -Wall -m32 -fno-exceptions -fno-rtti -std=c++1z -O0\
+CFLAGS := -Werror -Wall -m32 -fno-exceptions -fno-rtti -std=c++1z -O0          \
 					-ffreestanding -g3 -F dwarf -MMD -MP -Iincludes -fno-inline-functions
-#CFLAGS := -m32 -MMD -MP -g3 -F dwarf -Wall -O -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -Iincludes
 
 AS := nasm
 ASFLAGS := -f elf32 -g3 -F dwarf
 
-os.iso: $(BUILD_DIR)/test_kernel.elf iso/boot/initrd.img
+$(BUILD_DIR)/os.iso: $(BUILD_DIR)/test_kernel.elf iso/boot/initrd.img
 	printf "%-40s \033[0;33mCreating bootimage...\033[0m\r" "$@"
 	cp $(BUILD_DIR)/test_kernel.elf iso/boot/kernel.elf
-	genisoimage -R                                \
-                -b boot/grub/stage2_eltorito    \
-                -no-emul-boot                   \
-                -boot-load-size 4               \
-                -A os                           \
-                -input-charset utf8             \
-                -quiet                          \
-                -boot-info-table                \
-                -o os.iso                       \
-                iso
+	genisoimage -R                                                               \
+							-b boot/grub/stage2_eltorito                                     \
+							-no-emul-boot                                                    \
+							-boot-load-size 4                                                \
+							-A os                                                            \
+							-input-charset utf8                                              \
+							-quiet                                                           \
+							-boot-info-table                                                 \
+							-o $(BUILD_DIR)/os.iso                                           \
+							iso
 	printf "%-40s \033[0;32mCreated.               \033[0m\n" "$@"
 
 iso/boot/initrd.img: $(BUILD_DIR)/makefs $(INITRD_OBJS)
@@ -60,9 +60,9 @@ initrd/hi: initrd/hi.c
 	printf "%-40s \033[0;32mBuilt.            \033[0m\n" "$@"
 
 
-$(BUILD_DIR)/makefs: makefs.c
+$(BUILD_DIR)/makefs: scripts/makefs.c
 	printf "%-40s \033[0;33mCompiling...\033[0m\r" "$@"
-	gcc makefs.c -o $(BUILD_DIR)/makefs
+	gcc scripts/makefs.c -o $(BUILD_DIR)/makefs
 	printf "%-40s \033[0;32mCompiled.            \033[0m\n" "$@"
 	
 
@@ -95,17 +95,13 @@ kernel: $(BUILD_DIR)/kernel.elf
 
 .PHONY: test
 test: DEFS=-DTEST_RUN_MODE
-test: test_setup os.iso
-	./test.sh
+test: test_setup $(BUILD_DIR)/os.iso
+	./scripts/test.sh
 
 .PHONY: test_debug
 test_debug: DEFS=-DTEST_RUN_MODE
 test_debug: test_setup os.iso
-	./test.sh -S -s
-
-.PHONY: qemu
-qemu: kernel
-	./qemu.sh
+	./scripts/test.sh -S -s
 
 .PHONY: clean
 clean:
