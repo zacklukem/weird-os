@@ -1,7 +1,7 @@
 MAKEFLAGS += --silent
 
 BUILD_DIR := build
-KERNEL_SRC := kernel clib
+KERNEL_SRC := kernel
 
 FORMAT_FILES := $(shell find . \( -not -wholename "build/*" \) -and \( -name "*.h" -or -name "*.cpp" -or -name "*.c" \))
 
