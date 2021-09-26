@@ -26,7 +26,7 @@ LDFLAGS := -T scripts/link.ld
 
 CC := i386-elf-g++
 CFLAGS := -Werror -Wall -m32 -fno-exceptions -fno-rtti -std=c++1z -O0          \
-					-ffreestanding -g3 -F dwarf -MMD -MP -Iincludes -fno-inline-functions
+					-ffreestanding -g3 -F dwarf -MMD -MP -Iincludes
 
 AS := nasm
 ASFLAGS := -f elf32 -g3 -F dwarf
