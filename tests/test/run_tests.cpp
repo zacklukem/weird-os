@@ -27,7 +27,9 @@ static void __run_test_case__(void (*test)(struct __test_result__ *),
 }
 #pragma GCC diagnostic pop
 
-extern "C" void __run_kernel_tests__() {
+extern "C" void __run_kernel_tests__();
+
+void __run_kernel_tests__() {
   // cleark();
 #include "list_gen.h"
   if (num_failed) {

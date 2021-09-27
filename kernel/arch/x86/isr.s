@@ -49,8 +49,8 @@ extern syscall_handler
 global isr80
 
 isr80:
-  push byte 0
-  push byte 0x80
+  push 0
+  push 0x80
 
   pusha
   push ds

@@ -108,9 +108,9 @@ gdt_flush:
 flush2:
   ret
 
-%include "kernel/arch/x86/idt.s"
-%include "kernel/arch/x86/isr.s"
-%include "kernel/arch/x86/irq.s"
+%include "arch/x86/idt.s"
+%include "arch/x86/isr.s"
+%include "arch/x86/irq.s"
 
 section .bss
   resb 8192 ; reserved for the stack

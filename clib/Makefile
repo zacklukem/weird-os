@@ -1,28 +1,34 @@
+# clib makefile
+include ../scripts/globals.mk
 
-BUILD_DIR := build
+MOD := clib
 
-SOURCES := $(shell find . -name "*.c" -or -name "*.cpp" -or -name "*.asm")
+CLIB_BUILD_DIR := build
 
-OBJECTS := $(SOURCES:%=$(BUILD_DIR)/%.o)
+CLIB_SOURCES := $(shell find . -name "*.c" -or -name "*.cpp" -or -name "*.asm")
 
-CFLAGS := -Werror -Wall -m32 -fno-exceptions -fno-rtti -std=c++1z -O0          \
-					-ffreestanding -Iincludes
+CLIB_OBJECTS := $(CLIB_SOURCES:%=$(CLIB_BUILD_DIR)/%.o)
 
-$(BUILD_DIR)/clib.a: $(OBJECTS)
-	i386-elf-ar ru -o $@ $^
+$(CLIB_BUILD_DIR)/clib.a: $(CLIB_OBJECTS)
+	$(ld_banner)
+	$(AR) crs -o $@ $^
 
-$(BUILD_DIR)/%.cpp.o: %.cpp
+$(CLIB_BUILD_DIR)/%.cpp.o: %.cpp
+	$(cpp_banner)
 	mkdir -p $(dir $@)
-	i386-elf-gcc $(CFLAGS) -c $< -o $@
+	$(CPP) $(CPPFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.c.o: %.c
+$(CLIB_BUILD_DIR)/%.c.o: %.c
+	$(cc_banner)
 	mkdir -p $(dir $@)
-	i386-elf-gcc -nostdlib -Iincludes -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.asm.o: %.asm
+$(CLIB_BUILD_DIR)/%.asm.o: %.asm
+	$(as_banner)
 	mkdir -p $(dir $@)
 	nasm -f elf32 $< -o $@
 
 .PHONY: clean
 clean:
-	rm -r build
+	echo "Cleaning clib..."
+	rm -rf build
