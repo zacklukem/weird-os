@@ -1,4 +1,4 @@
-MAKEFLAGS += -silent
+MAKEFLAGS += --silent
 
 CROSS_BUILD_PREFIX := i386-elf-
 

@@ -121,6 +121,8 @@ public:
     return list_iterator<T>{last};
   }
 
+  list_node<T> *weak_first() { return first; }
+
 private:
   list_node<T> *first;
 }; // namespace util

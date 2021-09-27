@@ -23,3 +23,14 @@ TEST_CASE(rc_reassign) {
   ASSERT_EQ(r.count(), 1);
   ASSERT_EQ(s.count(), 2);
 }
+
+TEST_CASE(rc_ptr_cast) {
+  struct v {
+    int a;
+  };
+  auto r = util::make_rc<v>();
+  r->a = 32;
+  auto r_ptr = &r;
+  auto r_ptt = (v **)r_ptr;
+  ASSERT_EQ((*r_ptt)->a, 32);
+}

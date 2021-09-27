@@ -24,14 +24,16 @@ DEFS :=
 CPPFLAGS += -I../includes
 CFLAGS += -I../includes
 
-$(BUILD_DIR)/kernel.elf: DEFS=
-$(BUILD_DIR)/kernel.elf: $(KERNEL_OBJS)
-	$(ld_banner)
-	$(LD) $(LDFLAGS) $(KERNEL_OBJS) -o $@
+.PHONY: all
+all: $(BUILD_DIR)/test_kernel.elf
+
+# $(BUILD_DIR)/kernel.elf: DEFS=
+# $(BUILD_DIR)/kernel.elf: $(KERNEL_OBJS)
+# 	$(ld_banner)
+# 	$(LD) $(LDFLAGS) $(KERNEL_OBJS) -o $@
 
 $(BUILD_DIR)/test_kernel.elf: DEFS=-DTEST_RUN_MODE
-$(BUILD_DIR)/test_kernel.elf: $(KERNEL_OBJS)
-	$(MAKE) -C ../tests
+$(BUILD_DIR)/test_kernel.elf: tests $(KERNEL_OBJS)
 	$(ld_banner)
 	$(LD) $(LDFLAGS) $(KERNEL_OBJS) $(TEST_OBJS) -o $@
 
@@ -47,8 +49,9 @@ $(BUILD_DIR)/%.asm.o: %.asm
 	mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) $< -o $@
 
-#../tests/build/libtests.a:
-#	$(MAKE) -C ../tests
+.PHONY: tests
+tests:
+	$(MAKE) -C ../tests
 
 .PHONY: clean
 clean:

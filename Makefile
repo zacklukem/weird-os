@@ -18,7 +18,7 @@ test: $(BUILD_DIR)/os.iso
 test_debug: $(BUILD_DIR)/os.iso
 	./scripts/test.sh -S -s
 
-$(BUILD_DIR)/os.iso: kernel/build/test_kernel.elf iso/boot/initrd.img
+$(BUILD_DIR)/os.iso: kernel iso/boot/initrd.img
 	$(gen_banner)
 	cp kernel/build/test_kernel.elf iso/boot/kernel.elf
 	genisoimage -R                                                               \
@@ -42,8 +42,9 @@ $(BUILD_DIR)/makefs: scripts/makefs.c
 	mkdir -p $(dir $@)
 	gcc scripts/makefs.c -o $(BUILD_DIR)/makefs
 
-kernel/build/test_kernel.elf:
-	$(MAKE) build/test_kernel.elf -C kernel
+.PHONY: kernel
+kernel:
+	$(MAKE) -C kernel
 
 .PHONY: format
 format: $(FORMAT_FILES)

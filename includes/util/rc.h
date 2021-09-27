@@ -23,7 +23,8 @@ struct rc_counter {
 
 template <class T> class rc {
 public:
-  rc(__internal__::rc_counter *counter, T *ptr) : counter(counter), ptr(ptr) {
+  typedef T *ptr_type;
+  rc(__internal__::rc_counter *counter, T *ptr) : ptr(ptr), counter(counter) {
     counter->count++;
   };
 
@@ -75,24 +76,24 @@ public:
 
   size_t count() { return counter->count; }
 
-  explicit rc() : counter(new __internal__::rc_counter()), ptr(nullptr){};
+  explicit rc() : ptr(nullptr), counter(new __internal__::rc_counter()){};
 
-  constexpr rc(T *ptr) : counter(new __internal__::rc_counter()), ptr(ptr) {
+  constexpr rc(T *ptr) : ptr(ptr), counter(new __internal__::rc_counter()) {
     counter->count++;
   };
 
   inline constexpr __internal__::rc_counter *get_counter() { return counter; };
 
 private:
-  __internal__::rc_counter *counter;
   T *ptr;
+  __internal__::rc_counter *counter;
   template <class Y> friend class rc;
   template <class Y> friend class weak;
 };
 
 template <class T> class weak {
 public:
-  constexpr weak() : counter(new __internal__::rc_counter()), ptr(nullptr){};
+  constexpr weak() : ptr(nullptr), counter(new __internal__::rc_counter()){};
 
   weak(__internal__::rc_counter *counter, T *ptr) : counter(counter), ptr(ptr) {
     counter->weak_count++;
@@ -168,8 +169,8 @@ public:
   size_t count() { return counter->count; }
 
 private:
+  T *ptr; // Must be first element
   __internal__::rc_counter *counter;
-  T *ptr;
 };
 
 template <class K, class... Args> rc<K> make_rc(Args... args) {

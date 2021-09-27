@@ -26,11 +26,14 @@ optional<rc<dirent>> fs::resolve_path(const char *path) {
   return fs::virt_fs->resolve_path(path);
 }
 
+// Syscalls
+
 ssize_t fs::syscall_read(int fildes, void *buf, size_t nbyte, off_t offset) {
   // TODO: check permissions before calling inode func
   process::current()->fdtable.data[fildes]->m_inode->read(buf, nbyte, offset);
   return 0;
 }
+
 ssize_t fs::syscall_write(int fildes, const void *buf, size_t n, off_t offset) {
   process::current()->fdtable.data[fildes]->m_inode->write(buf, n, offset);
   return 0;
@@ -39,7 +42,6 @@ ssize_t fs::syscall_write(int fildes, const void *buf, size_t n, off_t offset) {
 int fs::syscall_close(int fildes) { return 0; }
 
 int fs::syscall_open_at(int fildes, const char *path, int oflag) {
-
   file *f = new file;
 
   process::current()->fdtable.data[fildes] = f;
@@ -58,4 +60,17 @@ int fs::syscall_open_at(int fildes, const char *path, int oflag) {
 
 int fs::syscall_open(const char *path, int oflag) {
   return syscall_open_at(process::current()->fdtable.last_desc++, path, oflag);
+}
+
+const util::list_node<dirent *> *syscall_fdopendir(int fildes) {
+  return process::current()
+      ->fdtable.data[fildes]
+      ->m_inode->m_dirent->opendir_weak();
+}
+
+const util::list_node<dirent *> *syscall_opendir(const char *path) {
+  int fildes = syscall_open(path, O_RDONLY);
+  return process::current()
+      ->fdtable.data[fildes]
+      ->m_inode->m_dirent->opendir_weak();
 }

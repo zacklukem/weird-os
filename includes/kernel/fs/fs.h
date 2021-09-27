@@ -56,8 +56,8 @@ ssize_t syscall_read(int fildes, void *buf, size_t nbyte, off_t offset);
 ssize_t syscall_write(int fildes, const void *buf, size_t n, off_t offset);
 int syscall_close(int fildes);
 int syscall_open(const char *path, int oflag);
-const util::list_iterator<dirent> *syscall_fdopendir(int fildes);
-const util::list_iterator<dirent> *syscall_opendir(const char *path);
+const util::list_node<dirent> *syscall_fdopendir(int fildes);
+const util::list_node<dirent> *syscall_opendir(const char *path);
 
 struct fdtable {
   file *data[FD_MAX];
@@ -160,6 +160,10 @@ public:
 
   util::optional<rc<dirent>> parent; ///< A reference to this dirent's parent
   bool locked = false;
+
+  inline const util::list_node<dirent *> *opendir_weak() {
+    return (util::list_node<dirent *> *)opendir().p;
+  };
 
 protected:
   // For cacheing
