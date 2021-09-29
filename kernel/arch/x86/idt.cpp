@@ -236,10 +236,12 @@ extern "C" void cpu_fault_handler(struct regs *r) {
       printk("reserved ");
     }
     printf(") at 0x%x\n", faulting_address);
+  } else if (r->int_no == 13) {
+    printf("segment: 0x%x\n", r->err_code);
   }
   if (r->int_no < 32) {
     printk(exception_messages[r->int_no]);
-    printk(" Exception. System Halted!\n");
+    printk(". System Halted!\n");
     while (1)
       __asm__("hlt" ::);
   }

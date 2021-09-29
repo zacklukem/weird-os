@@ -12,4 +12,6 @@ void main() {
                        "movl $0, %%ebx   \n" // fildes
                        "movl $3, %%eax   \n" // syscall write
                        "int $0x80      \n" ::"r"(hi));
+  while (1)
+    ;
 }

@@ -12,8 +12,6 @@ uint32_t *frames;
 uint32_t nframes;
 
 page_directory *kernel_directory;
-page_directory *current_directory;
-page_allocator current_allocator;
 
 // Macros used in the bitset algorithms.
 #define INDEX_FROM_BIT(a) (a / (8 * 4))
@@ -150,9 +148,6 @@ extern uint32_t boot_page_directory;
  * CR3 register.
  */
 void switch_page_directory(page_directory *dir) {
-  current_directory = dir;
-  current_allocator = page_allocator(current_directory);
-
   __asm__ __volatile__("mov %0, %%cr3" ::"r"(dir->physical_addr));
 }
 

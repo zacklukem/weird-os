@@ -27,6 +27,8 @@ typedef int ssize_t;
 static_assert(sizeof(ssize_t) == sizeof(void *),
               "ssize_t is not equal to pointer size");
 
+typedef uint32_t tid_t;
+typedef uint32_t pid_t;
 typedef uint32_t uid_t;
 typedef uint32_t ino_t;
 typedef uint32_t gid_t;

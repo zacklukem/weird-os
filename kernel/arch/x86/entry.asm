@@ -43,7 +43,7 @@ mboot:
 section .data
 align 0x1000
 boot_page_directory:
-	dd 0x00000083
+  dd 0x00000083
   dd 0x00400083
   dd 0x00800083
   dd 0x00c00083
@@ -107,6 +107,15 @@ gdt_flush:
   jmp 0x08:flush2   ; jump to code segment and initialze segment register
 flush2:
   ret
+
+global tss_flush
+tss_flush:
+   mov ax, 0x2B      ; Load the index of our TSS structure - The index is
+                     ; 0x28, as it is the 5th selector and each is 8 bytes
+                     ; long, but we set the bottom two bits (making 0x2B)
+                     ; so that it has an RPL of 3, not zero.
+   ltr ax            ; Load 0x2B into the task state register.
+   ret
 
 %include "arch/x86/idt.s"
 %include "arch/x86/isr.s"

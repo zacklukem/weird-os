@@ -7,8 +7,6 @@
 class page_allocator;
 
 extern struct page_directory *kernel_directory;
-extern struct page_directory *current_directory;
-extern page_allocator current_allocator;
 
 struct page {
   uint32_t present : 1;  // Page present in memory

@@ -66,6 +66,13 @@ extern "C" void __kernel_main__() {
   // TODO: not this:
   fs::syscall_open_at(0, "/dev/vga", O_WRONLY);
 
+  // process::current()->allocator.allocate(0, 0x2000, 0, 1);
+
+  // process::thread_t test(process::current(), 0);
+  //((process::trap_frame_t *)test.esp)->eip = (uint32_t)test_threading;
+
+  // test.switch_to();
+
 #ifdef TEST_RUN_MODE
   __run_kernel_tests__();
   // heap_info();
